@@ -1,10 +1,13 @@
+import datetime
+import time
+
+from facetools.common import parse_signed_request, create_signed_request, _create_permissions_string
 from facetools.tests.decorators import make_test_user
+from django.conf import settings
 
 def test_parse_signed_request():
-    from fandjango.utils import parse_signed_request
-    from mock_django.settings import TEST_SIGNED_REQUEST, FACEBOOK_APPLICATION_SECRET_KEY
-
-    data = parse_signed_request(TEST_SIGNED_REQUEST, FACEBOOK_APPLICATION_SECRET_KEY)
+    TEST_SIGNED_REQUEST = 'm2i3DMpnOG3JxFiISuLPN5sTCe9d3NMRyq3pcAtpKd8=.eyJpc3N1ZWRfYXQiOiAxMzI2MDYzOTUwLCAib2F1dGhfdG9rZW4iOiAiQUFBQ2sydEM5ekJZQkFFanlRY0VKWkN0cjgxWkFMM0ZRRXdvcjI5N2lJdFhlRFFYYkZwY0t3ZmdlNjdBdHlYYnBaQld1Z2pEZGdSdmZwbzUyTlRJU0N0ajlpZjZzWkMzSmp0ZXJtMjVyeEhPUDUzMlpDM3BFWSIsICJ1c2VyX2lkIjogMTAwMDAzMzI2OTkwOTkzLCAiYWxnb3JpdGhtIjogIkhNQUMtU0hBMjU2In0='
+    data = parse_signed_request(TEST_SIGNED_REQUEST, settings.FACEBOOK_APPLICATION_SECRET_KEY)
 
     assert data['user_id'] == 100003326990993
     assert data['algorithm'] == 'HMAC-SHA256'
@@ -12,22 +15,17 @@ def test_parse_signed_request():
     assert data['issued_at'] == 1326063950
 
 def test_create_signed_request():
-    import datetime
-    import time
-    from fandjango.utils import create_signed_request, parse_signed_request
-    from mock_django.settings import FACEBOOK_APPLICATION_SECRET_KEY
-
     # test sending only user_id
-    signed_request_user_1 = create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=1, issued_at=1254459601)
+    signed_request_user_1 = create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, user_id=1, issued_at=1254459601)
     assert signed_request_user_1 == 'Y0ZEAYY9tGklJimbbSGy2dgpYz9qZyVJp18zrI9xQY0=.eyJpc3N1ZWRfYXQiOiAxMjU0NDU5NjAxLCAidXNlcl9pZCI6IDEsICJhbGdvcml0aG0iOiAiSE1BQy1TSEEyNTYifQ=='
 
-    data_user_1 = parse_signed_request(signed_request_user_1, FACEBOOK_APPLICATION_SECRET_KEY)
+    data_user_1 = parse_signed_request(signed_request_user_1, settings.FACEBOOK_APPLICATION_SECRET_KEY)
     assert sorted(data_user_1.keys()) == sorted([u'user_id', u'algorithm', u'issued_at'])
     assert data_user_1['user_id'] == 1
     assert data_user_1['algorithm'] == 'HMAC-SHA256'
 
     # test not sending a user_id which will default to user_id 1
-    signed_request_user_2 = create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, issued_at=1254459601)
+    signed_request_user_2 = create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, issued_at=1254459601)
     assert signed_request_user_1 == signed_request_user_2
 
     # test sending each available named argument
@@ -35,8 +33,8 @@ def test_create_signed_request():
     tomorrow = today + datetime.timedelta(hours=1)
 
     signed_request_user_3 = create_signed_request(
-        app_secret = FACEBOOK_APPLICATION_SECRET_KEY,
-        user_id = 999,
+        app_secret = settings.FACEBOOK_APPLICATION_SECRET_KEY,
+        user_id = '999',
         issued_at = 1254459600,
         expires = tomorrow,
         oauth_token = '181259711925270|1570a553ad6605705d1b7a5f.1-499729129|8XqMRhCWDKtpG-i_zRkHBDSsqqk',
@@ -47,9 +45,9 @@ def test_create_signed_request():
         }
     )
 
-    data_user_3 = parse_signed_request(signed_request_user_3, FACEBOOK_APPLICATION_SECRET_KEY)
+    data_user_3 = parse_signed_request(signed_request_user_3, settings.FACEBOOK_APPLICATION_SECRET_KEY)
     assert sorted(data_user_3.keys()) == sorted([u'user_id', u'algorithm', u'issued_at', u'expires', u'oauth_token', u'app_data', u'page'])
-    assert data_user_3['user_id'] == 999
+    assert data_user_3['user_id'] == '999'
     assert data_user_3['algorithm'] == 'HMAC-SHA256'
     assert data_user_3['issued_at'] == 1254459600
     assert data_user_3['expires'] == int(time.mktime(tomorrow.timetuple()))
@@ -60,25 +58,7 @@ def test_create_signed_request():
         'liked': True
     }
 
-@make_test_user
-def test_get_facebook_profile(signed_request):
-    from fandjango.utils import get_facebook_profile
-
-    data = get_facebook_profile(signed_request['oauth_token'])
-
-    assert data['id'] == signed_request['user_id']
-    assert data['first_name'] == 'Please'
-    assert data['middle_name'] == 'Delete'
-    assert data['last_name'] == 'Me'
-    assert data['name'] == 'Please Delete Me'
-    assert data['gender'] == 'male' or data['gender'] == 'female'
-    assert data['link'] in [
-        'http://www.facebook.com/profile.php?id=%s' % signed_request['user_id'],
-        'https://www.facebook.com/profile.php?id=%s' % signed_request['user_id'],
-    ]
-
 def test_create_permissions_string():
-    from fandjango.utils import _create_permissions_string
     permissions1 = ['read_stream','user_birthday','user_hometown']
     permissions2 = [' read_stream','user_birthday ',' user_hometown ']
     permissions3 = []

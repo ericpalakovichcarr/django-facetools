@@ -3,11 +3,9 @@ import base64
 import hmac
 import hashlib
 import time
-try:
-   import json
-except ImportError:
-   from django.utils import simplejson as json
+
 from django.conf import settings
+from facetools import json
 
 def _get_app_access_token(app_id=None, app_secret=None):
     """
