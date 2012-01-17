@@ -31,7 +31,6 @@ Table of Contents
    testusers
    testcase
 
-
 Indices and tables
 ==================
 
