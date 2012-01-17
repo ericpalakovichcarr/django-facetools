@@ -1,9 +1,6 @@
 Django Facetools Documentation
 ******************************
 
-Introduction
-==================================================
-
 Django Facetools provides a set of features to ease development of Facecbook
 canvas apps in a Django project.
 
@@ -20,22 +17,4 @@ Features:
   specify a test user, much like a fixture, and requests to the test client
   will contain a valid signed_request for the test user.
 
-Table of Contents
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   installation
-   urls
-   testusers
-   testcase
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+You can read more at
