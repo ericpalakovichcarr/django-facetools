@@ -7,7 +7,7 @@ import time
 from django.conf import settings
 from facetools import json
 
-def _get_app_access_token(app_id=None, app_secret=None):
+def get_app_access_token(app_id=None, app_secret=None):
     """
     Creates the app access token using either specified Facebook app settings
     or the FACEBOOK_XXX variables defined in settings.py
@@ -22,7 +22,7 @@ def _get_app_access_token(app_id=None, app_secret=None):
         app_secret = settings.FACEBOOK_APPLICATION_SECRET_KEY
     return '%s|%s' % (app_id, app_secret)
 
-def _create_permissions_string(permission_list):
+def create_permissions_string(permission_list):
     """
     Creates an list of individual facebook permissions
     and makes a comma seperated string of permissions.

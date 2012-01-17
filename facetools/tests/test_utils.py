@@ -1,7 +1,7 @@
 import datetime
 import time
 
-from facetools.common import parse_signed_request, create_signed_request, _create_permissions_string
+from facetools.common import parse_signed_request, create_signed_request, create_permissions_string
 from facetools.tests.decorators import make_test_user
 from django.conf import settings
 
@@ -62,9 +62,9 @@ def test_create_permissions_string():
     permissions1 = ['read_stream','user_birthday','user_hometown']
     permissions2 = [' read_stream','user_birthday ',' user_hometown ']
     permissions3 = []
-    permissions1 = _create_permissions_string(permissions1)
-    permissions2 = _create_permissions_string(permissions2)
-    permissions3 = _create_permissions_string(permissions3)
+    permissions1 = create_permissions_string(permissions1)
+    permissions2 = create_permissions_string(permissions2)
+    permissions3 = create_permissions_string(permissions3)
     assert 'read_stream,user_birthday,user_hometown' == permissions1
     assert 'read_stream,user_birthday,user_hometown' == permissions2
     assert '' == permissions3

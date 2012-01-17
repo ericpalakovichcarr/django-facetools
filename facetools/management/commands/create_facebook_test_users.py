@@ -5,60 +5,82 @@ from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
 
-from fandjango.test import create_test_user, friend_test_users
-from fandjango.test.common import _get_relationships
+from facetools.test import create_test_user, friend_test_users
+from facetools.test.common import _create_test_user_on_facebook, _create_test_user_on_facetools
+from facetools.models import TestUser
 
 class Command(AppCommand):
     help = 'Creates the facebook test users defined in each app in the project.'
-    option_list = BaseCommand.option_list + (
-        make_option('--allow_duplicate_users', action="store_true", dest='allow_duplicate_users',
-            help='Specifies the indent level to use when pretty-printing output'),
-    )
 
     def handle_app(self, app, **options):
-        allow_duplicate_users = options.get('allow_duplicate_users', False)
         app_name = '.'.join(app.__name__.split('.')[0:-1])
 
-        fandjango_test_users = get_fandjango_test_users(app_name)
-        if not allow_duplicate_users:
-            existing_facebook_test_users = get_existing_facebook_test_users()
+        test_users = get_facetools_test_users(app_name)
+        existing_facebook_test_users = get_existing_facebook_test_users()
+        existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
+        existing_test_users = set(existing_facebook_test_users + existing_facetool_test_users)
 
-        # Create any test users on facebook their corresponding User models in fandjango
-        # that don't exist on facebook yet
-        for fandjango_test_user in fandjango_test_users:
-            if allow_duplicate_users or fandjango_test_user['name'] not in existing_facebook_test_users:
-                fandjango_test_user['user'] = create_test_user(
-                    app_installed=fandjango_test_user.get('installed'),
-                    name=fandjango_test_user.get('name'),
-                    permissions=fandjango_test_user.get('permissions'),
+        # Create any test users on facebook their corresponding User models in facetools
+        # that don't exist on facebook yet.
+        for test_user in test_users:
+            # Add user to facebook and local database
+            if test_user['name'] not in existing_test_users:
+                create_test_user(
+                    app_installed = test_user.get('installed', True),
+                    name          = test_user['name'],
+                    permissions   = test_user.get('permissions'),
                 )
 
-        # Get a list of each relationship between test users, no duplicates
-        relationships = [list(r) for r in _get_relationships(fandjango_test_users)]
-        for relationship in relationships:
-            relationship = list(relationship)
-            friend_test_users(relationship[0], relationship[1])
+            # Add test user to facebook and sync with existing test user in the local database
+            elif test_user['name'] not in existing_facebook_test_users:
+                facebook_response_data = _create_test_user_on_facebook(
+                    app_installed = test_user.get('installed', True),
+                    name          = test_user['name'],
+                    permissions   = test_user.get('permissions')
+                )
+                facetools_user = TestUser.objects.get(name=test_user['name'])
+                facetools_user.facebook_id = facebook_response_data['id']
+                facetools_user.access_token = facebook_response_data.get('access_token', "")
+                facetools_user.save()
 
-def get_fandjango_test_users(app_name, test_user_module_name='facebook_test_users'):
+            # Add test user to the local database using the test user's data on facebook
+            elif test_user['name'] not in existing_facetool_test_users:
+                facebook_data = existing_facebook_test_users[test_user['name']]
+                TestUser.objects.create(
+                    name         = test_user['name'],
+                    facebook_id  = facebook_data['id'],
+                    access_token = facebook_data['access_token']
+                )
+
+        # Get a list of each friendship between test users, no duplicates
+        friendships = [list(r) for r in get_test_user_relationships(facetools_test_users)]
+        for friendship in friendships:
+            friendship = list(friendship)
+            friend_test_users(friendship[0], friendship[1])
+
+def get_facetools_test_users(app_name, test_user_module_name='facebook_test_users'):
     """Get the dictionary of facebook test users for the app, throwing an error if the app
     doesn't have any defined."""
 
     try:
         _temp = __import__(app_name, globals(), locals(), [test_user_module_name])
-        fandjango_test_users = _temp.facebook_test_users.facebook_test_users
-        if callable(fandjango_test_users):
-            fandjango_test_users = fandjango_test_users()
+        facetools_test_users = _temp.facebook_test_users.facebook_test_users
+        if callable(facetools_test_users):
+            facetools_test_users = facetools_test_users()
     except ImportError:
         raise Exception("Error: %s doesn't have a module called %s" % (app_name, test_user_module_name))
 
     # Ensure no test users share the same name
-    fandjango_test_names = set([u['name'] for u in fandjango_test_users])
-    if len(fandjango_test_names) != len(fandjango_test_users):
+    facetools_test_names = set([u['name'] for u in facetools_test_users])
+    if len(facetools_test_names) != len(facetools_test_users):
         raise Exception("Error: Duplicate names found in %s for %s" % (test_user_module_name, app_name))
 
-    return fandjango_test_users
+    return facetools_test_users
 
 def get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, app_secret=settings.FACEBOOK_APPLICATION_SECRET_KEY):
+    """
+    Get the facebook data for each test user defined for the app.
+    """
     existing_facebook_test_users = {}
     app_access_token = '%s|%s' % (app_id, app_secret)
     test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (app_id, app_access_token)
@@ -70,11 +92,28 @@ def get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, ap
         for test_user in users_response_data['data']:
             user_response_data = json.loads(requests.get(test_user_url % (test_user['id'], app_access_token)).content)
             if user_response_data == False:
-                # skip invalid users
+                # skip invalid users defined on facebook
                 continue
             if 'error' in user_response_data:
                 raise Exception("Error retrieving data for %s: %s" % (test_user['id'], user_response_data['error']['message']))
             elif 'name' in user_response_data:
+                user_response_data['access_token'] = test_user['access_token']
                 existing_facebook_test_users[user_response_data['name']] = user_response_data
 
     return existing_facebook_test_users
+
+def get_test_user_relationships(test_users):
+    """
+    Takes a facebook_test_users dict and returns a list of relationships, with
+    each item being a set of 2 names that should be friends.
+    """
+    relationships = []
+    for test_user in test_users:
+        if 'friends' in test_user:
+            for friend in test_user['friends']:
+                relationships.append(set([test_user['name'], friend]))
+    no_dupes = []
+    for relationship in relationships:
+        if relationship not in no_dupes:
+            no_dupes.append(relationship)
+    return no_dupes
