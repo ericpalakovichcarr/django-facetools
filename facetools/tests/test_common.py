@@ -3,8 +3,7 @@ import time
 
 from django.conf import settings
 from django.test import TestCase
-from facetools.urls import facebook_reverse, facebook_redirect
-from fandjango.models import ModelForTests
+from canvas.models import ModelForTests
 
 from facetools.common import _parse_signed_request, _create_signed_request, _create_permissions_string
 
@@ -28,6 +27,13 @@ class CommonTests(TestCase):
 # -----------------------------------------------------------------------------
 
 class SignedRequestTests(TestCase):
+
+    def setUp(self):
+        self.old_secret = settings.FACEBOOK_APPLICATION_SECRET_KEY
+        settings.FACEBOOK_APPLICATION_SECRET_KEY = "214e4cb484c28c35f18a70a3d735999b"
+
+    def tearDown(self):
+        settings.FACEBOOK_APPLICATION_SECRET_KEY = self.old_secret
 
     def test_parse_signed_request(self):
         TEST_SIGNED_REQUEST = 'm2i3DMpnOG3JxFiISuLPN5sTCe9d3NMRyq3pcAtpKd8=.eyJpc3N1ZWRfYXQiOiAxMzI2MDYzOTUwLCAib2F1dGhfdG9rZW4iOiAiQUFBQ2sydEM5ekJZQkFFanlRY0VKWkN0cjgxWkFMM0ZRRXdvcjI5N2lJdFhlRFFYYkZwY0t3ZmdlNjdBdHlYYnBaQld1Z2pEZGdSdmZwbzUyTlRJU0N0ajlpZjZzWkMzSmp0ZXJtMjVyeEhPUDUzMlpDM3BFWSIsICJ1c2VyX2lkIjogMTAwMDAzMzI2OTkwOTkzLCAiYWxnb3JpdGhtIjogIkhNQUMtU0hBMjU2In0='

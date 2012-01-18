@@ -102,21 +102,21 @@ def _friend_test_users(user, friend):
     user = TestUser.objects.get(name=user)
     friend = TestUser.objects.get(name=friend)
     response = requests.get("https://graph.facebook.com/%s/friends/%s?method=post&access_token=%s" %
-            (user.facebook_id, friend.facebook_id, user.oauth_token.token))
-    _handle_friend_test_users_error(user, friend, response)
+            (user.facebook_id, friend.facebook_id, user.access_token))
+    __handle_friend_test_users_error(user, friend, response)
     response = requests.get("https://graph.facebook.com/%s/friends/%s?method=post&access_token=%s" %
-            (friend.facebook_id, user.facebook_id, friend.oauth_token.token))
-    _handle_friend_test_users_error(user, friend, response)
+            (friend.facebook_id, user.facebook_id, friend.access_token))
+    __handle_friend_test_users_error(user, friend, response)
 
 def __handle_friend_test_users_error(user, friend, response):
-    error_message = "Failed to friend %s with %s" % (user.full_name, friend.full_name)
+    error_message = "Failed to friend %s with %s" % (user.name, friend.name)
     try: rdata = json.loads(response.content)
     except: rdata = False
 
     if rdata == False:
         raise CreateTestUserError(error_message)
     elif type(rdata) is not bool and 'error' in rdata:
-        if not _already_friends(rdata):
+        if not __already_friends(rdata):
             try:
                 error_message += " (%s)" % rdata['error']['message']
             finally:

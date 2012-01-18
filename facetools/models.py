@@ -25,7 +25,7 @@ class TestUser(models.Model):
                     raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (self.name, self.facebook_id, json.loads(r.content)['error']['message']))
                 except:
                     raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (self.name, self.facebook_id, r.content))
-            elif 'error' in rdata and 'message' in rdata['error']:
+            elif rdata == False and 'error' in rdata and 'message' in rdata['error']:
                 raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (self.name, self.facebook_id, json.loads(r.content)['error']['message']))
 
         super(TestUser, self).delete(*args, **kwargs)

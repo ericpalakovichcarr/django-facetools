@@ -5,7 +5,7 @@ from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
 
-from facetools.test.common import _create_test_user, _friend_test_users, _create_test_user_on_facebook, _create_test_user_on_facetools
+from facetools.test.common import _create_test_user, _friend_test_users, _create_test_user_on_facebook
 from facetools.models import TestUser
 
 class Command(AppCommand):
@@ -17,7 +17,7 @@ class Command(AppCommand):
         test_users = _get_facetools_test_users(app_name)
         existing_facebook_test_users = _get_existing_facebook_test_users()
         existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
-        existing_test_users = set(existing_facebook_test_users + existing_facetool_test_users)
+        existing_test_users = set(existing_facebook_test_users.keys() + existing_facetool_test_users)
 
         # Create any test users on facebook their corresponding User models in facetools
         # that don't exist on facebook yet.
@@ -52,7 +52,7 @@ class Command(AppCommand):
                 )
 
         # Get a list of each friendship between test users, no duplicates
-        friendships = [list(r) for r in _get_test_user_relationships(facetools_test_users)]
+        friendships = [list(r) for r in _get_test_user_relationships(test_users)]
         for friendship in friendships:
             friendship = list(friendship)
             _friend_test_users(friendship[0], friendship[1])

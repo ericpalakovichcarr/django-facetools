@@ -4,3 +4,4 @@ dist
 virenv
 .idea
 docs/_build
+FACEBOOK_APPLICATION_SECRET_KEY*
