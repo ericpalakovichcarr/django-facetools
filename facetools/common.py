@@ -7,7 +7,7 @@ import time
 from django.conf import settings
 from facetools import json
 
-def get_app_access_token(app_id=None, app_secret=None):
+def _get_app_access_token(app_id=None, app_secret=None):
     """
     Creates the app access token using either specified Facebook app settings
     or the FACEBOOK_XXX variables defined in settings.py
@@ -22,38 +22,44 @@ def get_app_access_token(app_id=None, app_secret=None):
         app_secret = settings.FACEBOOK_APPLICATION_SECRET_KEY
     return '%s|%s' % (app_id, app_secret)
 
-def create_permissions_string(permission_list):
+def _create_permissions_string(permission_list):
     """
     Creates an list of individual facebook permissions
     and makes a comma seperated string of permissions.
     """
     return ','.join(permission_list).replace(" ", "")
 
-def parse_signed_request(signed_request, app_secret):
-        """Return dictionary with signed request data."""
-        try:
-            l = signed_request.split('.', 2)
-            encoded_sig = str(l[0])
-            payload = str(l[1])
-        except IndexError:
-            raise ValueError("Signed request malformed")
+# ---------------------------------------------------------------------
+# Following code by Reik Schatz. Taken from Fandjango. Thanks Reik!
+# http://javasplitter.blogspot.com/
+# https://github.com/reikje
+# ---------------------------------------------------------------------
 
-        sig = base64.urlsafe_b64decode(encoded_sig + "=" * ((4 - len(encoded_sig) % 4) % 4))
-        data = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
+def _parse_signed_request(signed_request, app_secret):
+    """Return dictionary with signed request data."""
+    try:
+        l = signed_request.split('.', 2)
+        encoded_sig = str(l[0])
+        payload = str(l[1])
+    except IndexError:
+        raise ValueError("Signed request malformed")
 
-        data = json.loads(data)
+    sig = base64.urlsafe_b64decode(encoded_sig + "=" * ((4 - len(encoded_sig) % 4) % 4))
+    data = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
 
-        if data.get('algorithm').upper() != 'HMAC-SHA256':
-            raise ValueError("Signed request is using an unknown algorithm")
-        else:
-            expected_sig = hmac.new(app_secret, msg=payload, digestmod=hashlib.sha256).digest()
+    data = json.loads(data)
 
-        if sig != expected_sig:
-            raise ValueError("Signed request signature mismatch")
-        else:
-            return data
+    if data.get('algorithm').upper() != 'HMAC-SHA256':
+        raise ValueError("Signed request is using an unknown algorithm")
+    else:
+        expected_sig = hmac.new(app_secret, msg=payload, digestmod=hashlib.sha256).digest()
 
-def create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None):
+    if sig != expected_sig:
+        raise ValueError("Signed request signature mismatch")
+    else:
+        return data
+
+def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None):
     """
     Returns a string that is a valid signed_request parameter specified by Facebook
     see: http://developers.facebook.com/docs/authentication/signed_request/
@@ -73,9 +79,9 @@ def create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=Non
         -- issued_at
 
     Examples:
-        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY)
-        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199)
-        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199, issued_at=1254459600)
+        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY)
+        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199)
+        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199, issued_at=1254459600)
 
     """
     payload = {'user_id': user_id, 'algorithm': 'HMAC-SHA256'}
@@ -125,3 +131,7 @@ def __create_signed_request_parameter(app_secret, payload):
         """
         base64_encoded_payload = base64.urlsafe_b64encode(payload)
         return __prepend_signature(app_secret, base64_encoded_payload) + "." + base64_encoded_payload
+
+# ---------------------------------------------------------------------
+# End snatched code by Reik Schatz.
+# ---------------------------------------------------------------------

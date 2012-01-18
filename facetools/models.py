@@ -1,6 +1,6 @@
 import requests
 from django.db import models
-from facetools.common import get_app_access_token
+from facetools.common import _get_app_access_token
 from facetools import json
 
 class DeleteTestUserError(Exception): pass
@@ -16,7 +16,7 @@ class TestUser(models.Model):
     def delete(self, *args, **kwargs):
         if self.facebook_id:
             delete_url_template = "https://graph.facebook.com/%s?method=delete&access_token=%s"
-            delete_user_url = delete_url_template % (self.facebook_id, get_app_access_token())
+            delete_user_url = delete_url_template % (self.facebook_id, _get_app_access_token())
             r = requests.delete(delete_user_url)
             try: rdata = json.loads(r.content)
             except: rdata = {}

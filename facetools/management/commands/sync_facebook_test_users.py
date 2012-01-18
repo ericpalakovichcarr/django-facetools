@@ -5,8 +5,7 @@ from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
 
-from facetools.test import create_test_user, friend_test_users
-from facetools.test.common import _create_test_user_on_facebook, _create_test_user_on_facetools
+from facetools.test.common import _create_test_user, _friend_test_users, _create_test_user_on_facebook, _create_test_user_on_facetools
 from facetools.models import TestUser
 
 class Command(AppCommand):
@@ -15,8 +14,8 @@ class Command(AppCommand):
     def handle_app(self, app, **options):
         app_name = '.'.join(app.__name__.split('.')[0:-1])
 
-        test_users = get_facetools_test_users(app_name)
-        existing_facebook_test_users = get_existing_facebook_test_users()
+        test_users = _get_facetools_test_users(app_name)
+        existing_facebook_test_users = _get_existing_facebook_test_users()
         existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
         existing_test_users = set(existing_facebook_test_users + existing_facetool_test_users)
 
@@ -25,7 +24,7 @@ class Command(AppCommand):
         for test_user in test_users:
             # Add user to facebook and local database
             if test_user['name'] not in existing_test_users:
-                create_test_user(
+                _create_test_user(
                     app_installed = test_user.get('installed', True),
                     name          = test_user['name'],
                     permissions   = test_user.get('permissions'),
@@ -53,12 +52,12 @@ class Command(AppCommand):
                 )
 
         # Get a list of each friendship between test users, no duplicates
-        friendships = [list(r) for r in get_test_user_relationships(facetools_test_users)]
+        friendships = [list(r) for r in _get_test_user_relationships(facetools_test_users)]
         for friendship in friendships:
             friendship = list(friendship)
-            friend_test_users(friendship[0], friendship[1])
+            _friend_test_users(friendship[0], friendship[1])
 
-def get_facetools_test_users(app_name, test_user_module_name='facebook_test_users'):
+def _get_facetools_test_users(app_name, test_user_module_name='facebook_test_users'):
     """Get the dictionary of facebook test users for the app, throwing an error if the app
     doesn't have any defined."""
 
@@ -77,7 +76,7 @@ def get_facetools_test_users(app_name, test_user_module_name='facebook_test_user
 
     return facetools_test_users
 
-def get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, app_secret=settings.FACEBOOK_APPLICATION_SECRET_KEY):
+def _get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, app_secret=settings.FACEBOOK_APPLICATION_SECRET_KEY):
     """
     Get the facebook data for each test user defined for the app.
     """
@@ -102,7 +101,7 @@ def get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, ap
 
     return existing_facebook_test_users
 
-def get_test_user_relationships(test_users):
+def _get_test_user_relationships(test_users):
     """
     Takes a facebook_test_users dict and returns a list of relationships, with
     each item being a set of 2 names that should be friends.

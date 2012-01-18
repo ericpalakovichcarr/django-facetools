@@ -4,27 +4,55 @@ import copy
 import requests
 from django.test import TestCase
 from django.core import management
+from django.conf import settings
 
-from mock_django.settings import FACEBOOK_APPLICATION_ID, FACEBOOK_APPLICATION_SECRET_KEY
-from fandjango.models import User
+from facetools.management.commands.sync_facebook_test_users import _get_test_user_relationships
+from facetools.common import _get_app_access_token
+from facetools.models import TestUser
 
-class CreateFacebookTestUsersTests(TestCase):
+class SyncFacebookTestUsersTests(TestCase):
 
     def tearDown(self):
-        for test_user in User.objects.filter(is_test_user=True):
+        for test_user in TestUser.objects.all():
             test_user.delete() # should also delete facebook test user through delete method override
 
-    def test_creating_one_user(self):
-        from mock_django.testapp1.facebook_test_users import facebook_test_users
-        self.assertEquals(0, User.objects.count())
-        app_access_token = '%s|%s' % (FACEBOOK_APPLICATION_ID, FACEBOOK_APPLICATION_SECRET_KEY)
+    def test_get_test_user_relationships(self):
+        t1 = [{'name': 'Unittest Jacobs', 'friends': ['Unittest Deschain','Unittest Billows']},
+              {'name': 'Unittest Deschain', 'friends': ['Unittest Jacobs','Unittest Billows']},
+              { 'name': 'Unittest Billows', 'friends': ['Unittest Deschain', 'Unittest Jacobs']}]
+        t2 = [{'name': 'Unittest Jacobs', 'friends': ['Unittest Deschain']},
+              {'name': 'Unittest Deschain', 'friends': ['Unittest Jacobs']},
+              { 'name': 'Unittest Billows', 'friends': ['Unittest Deschain', 'Unittest Jacobs']}]
+        t3 = [{'name': 'Unittest Jacobs', 'friends': ['Unittest Deschain']},
+              {'name': 'Unittest Deschain', 'friends': []},
+              { 'name': 'Unittest Billows', 'friends': ['Unittest Deschain', 'Unittest Jacobs']}]
+        t4 = [{'name': 'Unittest Jacobs', 'friends': []},
+              {'name': 'Unittest Deschain', 'friends': ['Unittest Jacobs']},
+              { 'name': 'Unittest Billows', 'friends': ['Unittest Deschain', 'Unittest Jacobs']}]
+        t5 = [{'name': 'Unittest Jacobs', 'friends': ['Unittest Billows']},
+              {'name': 'Unittest Deschain', 'friends': ['Unittest Jacobs']},
+              { 'name': 'Unittest Billows', 'friends': ['Unittest Deschain']}]
 
-        management.call_command('create_facebook_test_users', 'testapp1', allow_duplicate_users=True)
+        for t in [t1,t2,t3,t4,t5]:
+            relationships = _get_test_user_relationships(t)
+            self.assertEquals(3, len(relationships))
+            self.assertTrue((set([t[0]['name'], t[1]['name']])) in relationships)
+            self.assertTrue((set([t[0]['name'], t[2]['name']])) in relationships)
+            self.assertTrue((set([t[1]['name'], t[2]['name']])) in relationships)
+
+    def test_creating_one_user(self):
+        if not settings.FACETOOLS_TEST_ENV:
+            return
+
+        from mock_django.testapp1.facebook_test_users import facebook_test_users
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp1')
 
         # Get the test user data from facebook
-        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, app_access_token)
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (
+            settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
         api_test_users = json.loads(requests.get(test_users_url).content)['data']
-        test_users = merge_with_facebook_data(facebook_test_users, api_test_users, app_access_token)
+        test_users = merge_with_facebook_data(facebook_test_users, api_test_users, _get_app_access_token())
 
         # Make sure the test user's information on facebook is correct
         self.assertEquals(1, len(test_users))
@@ -33,24 +61,25 @@ class CreateFacebookTestUsersTests(TestCase):
             self.assertTrue(permission.strip() in test_users[0]['graph_permission_data']['data'][0])
 
         # Make sure the test user's information in Fandjango is correct
-        self.assertEquals(1, User.objects.count())
-        user = User.objects.get()
-        self.assertTrue(user.is_test_user)
+        self.assertEquals(1, TestUser.objects.count())
+        user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
-        self.assertEquals(test_users[0]['name'], user.full_name)
+        self.assertEquals(test_users[0]['name'], user.name)
 
     def test_overwrite_one_user(self):
-        from mock_django.testapp1.facebook_test_users import facebook_test_users
-        self.assertEquals(0, User.objects.count())
-        app_access_token = '%s|%s' % (FACEBOOK_APPLICATION_ID, FACEBOOK_APPLICATION_SECRET_KEY)
+        if not settings.FACETOOLS_TEST_ENV:
+            return
 
-        management.call_command('create_facebook_test_users', 'testapp1', allow_duplicate_users=True)
-        management.call_command('create_facebook_test_users', 'testapp1')
+        from mock_django.testapp1.facebook_test_users import facebook_test_users
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp1')
+        management.call_command('sync_facebook_test_users', 'testapp1')
 
         # Get the test user data from facebook
-        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, app_access_token)
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (
+            settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
         api_test_users = json.loads(requests.get(test_users_url).content)['data']
-        test_users = merge_with_facebook_data(facebook_test_users, api_test_users, app_access_token)
+        test_users = merge_with_facebook_data(facebook_test_users, api_test_users, _get_app_access_token())
 
         # Make sure the test user's information on facebook is correct
         self.assertEquals(1, len(test_users))
@@ -60,28 +89,23 @@ class CreateFacebookTestUsersTests(TestCase):
             self.assertTrue(permission.strip() in test_users[0]['graph_permission_data']['data'][0])
 
         # Make sure the test user's information in Fandjango is correct
-        self.assertEquals(1, User.objects.count())
-        user = User.objects.get()
-        self.assertTrue(user.is_test_user)
+        self.assertEquals(1, TestUser.objects.count())
+        user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
-        self.assertEquals(test_users[0]['graph_user_data']['name'], user.full_name)
-
-    def test_delete_one_user(self):
-        pass
+        self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
 
     def test_creating_many_users(self):
+        if not settings.FACETOOLS_TEST_ENV:
+            return
+
         from mock_django.testapp2.facebook_test_users import facebook_test_users
         facebook_test_users = facebook_test_users()
-        self.assertEquals(0, User.objects.count())
-        app_access_token = '%s|%s' % (FACEBOOK_APPLICATION_ID, FACEBOOK_APPLICATION_SECRET_KEY)
-
-        management.call_command('create_facebook_test_users', 'testapp2', allow_duplicate_users=True)
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp2')
 
         # Get the test user data from facebook
-        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, app_access_token)
-        test_users = merge_with_facebook_data(facebook_test_users,
-                                              json.loads(requests.get(test_users_url).content)['data'],
-                                              app_access_token)
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
 
         # Make sure each test user's information on facebook is correct
         self.assertEquals(3, len(test_users))
@@ -91,26 +115,24 @@ class CreateFacebookTestUsersTests(TestCase):
                 self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
 
         # Make sure each test user's information in Fandjango is correct
-        self.assertEquals(3, User.objects.count())
-        for user in User.objects.all():
-            test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
-            self.assertTrue(user.is_test_user)
-            self.assertEquals(test_user['name'], user.full_name)
+        self.assertEquals(3, TestUser.objects.count())
+        for user in TestUser.objects.all():
+            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            self.assertEquals(test_user['name'], user.name)
 
     def test_overwriting_many_users(self):
+        if not settings.FACETOOLS_TEST_ENV:
+            return
+
         from mock_django.testapp2.facebook_test_users import facebook_test_users
         facebook_test_users = facebook_test_users()
-        self.assertEquals(0, User.objects.count())
-        app_access_token = '%s|%s' % (FACEBOOK_APPLICATION_ID, FACEBOOK_APPLICATION_SECRET_KEY)
-
-        management.call_command('create_facebook_test_users', 'testapp2', allow_duplicate_users=True)
-        management.call_command('create_facebook_test_users', 'testapp2')
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp2', allow_duplicate_users=True)
+        management.call_command('sync_facebook_test_users', 'testapp2')
 
         # Get the test user data from facebook
-        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, app_access_token)
-        test_users = merge_with_facebook_data(facebook_test_users,
-                                              json.loads(requests.get(test_users_url).content)['data'],
-                                              app_access_token)
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
 
         # Make sure each test user's information on facebook is correct
         self.assertEquals(3, len(test_users))
@@ -120,14 +142,11 @@ class CreateFacebookTestUsersTests(TestCase):
                 self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
 
         # Make sure each test user's information in Fandjango is correct
-        self.assertEquals(3, User.objects.count())
-        for user in User.objects.all():
+        self.assertEquals(3, TestUser.objects.count())
+        for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertTrue(user.is_test_user)
             self.assertEquals(test_user['name'], user.full_name)
-
-    def test_deleting_many_users(self):
-        pass
 
     def test_creating_users_with_friends(self):
         pass

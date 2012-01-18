@@ -3,7 +3,7 @@ import json
 import datetime
 
 from django.conf import settings
-from facetools.common import get_app_access_token, create_permissions_string
+from facetools.common import _get_app_access_token, _create_permissions_string
 from facetools.models import TestUser
 import requests
 
@@ -14,7 +14,7 @@ class NotATestUser(Exception): pass
 # Functions for creating test users on facebook and in facetools
 # -------------------------------------------------------------------------------------
 
-def create_test_user(app_installed=True, name=None, permissions=None, access_token=None):
+def _create_test_user(app_installed=True, name=None, permissions=None, access_token=None):
     """
     Creates a test user on facebook and a corresponding User and OAuthToken object in the database.
     Friends can be set with set_test_user_friends after all test users are created.  Assumes
@@ -41,9 +41,9 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
         app_installed = "false"
     if permissions is None:
         permissions = settings.FACEBOOK_APPLICATION_INITIAL_PERMISSIONS
-    permissions = create_permissions_string(permissions)
+    permissions = _create_permissions_string(permissions)
     if access_token is None:
-        access_token = get_app_access_token()
+        access_token = _get_app_access_token()
     test_user_url = test_user_template % (settings.FACEBOOK_APPLICATION_ID, app_installed, permissions, access_token)
     if name:
         test_user_url = '%s&name=%s' % (test_user_url,urllib.quote(name))
@@ -93,7 +93,7 @@ def _create_test_user_in_facetools(name, facebook_data):
 # Functions for creating friends between test users
 # -------------------------------------------------------------------------------------
 
-def friend_test_users(user, friend):
+def _friend_test_users(user, friend):
     """
     Makes two users friends. user friend a list of other test users.  The list
     of friends can be a list containing either a string of the friends

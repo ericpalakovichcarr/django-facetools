@@ -1,2 +1,1 @@
 from testcases import FacebookTestCase
-from common import create_test_user, friend_test_users
