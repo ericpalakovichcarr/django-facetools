@@ -1,7 +1,3 @@
-try:
-   import json
-except ImportError:
-   from django.utils import simplejson as json
 from urlparse import urlparse
 
 from django.http import HttpResponse
@@ -9,7 +5,7 @@ from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.conf import settings
 
-def convert_url_to_facebook_url(url):
+def translate_url_to_facebook_url(url):
     """
     Converts a url on the canvas path to it's facebook equivalent.  Requires
     FACEBOOK_CANVAS_URL and FACEBOOK_CANVAS_PAGE to be set in your Django
@@ -47,7 +43,7 @@ def facebook_reverse(*args, **kwargs):
     for more information on the arguments ``facebook_reverse`` can take.
     """
     url = reverse(*args, **kwargs)
-    return convert_url_to_facebook_url(url)
+    return translate_url_to_facebook_url(url)
 
 def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     """
@@ -85,6 +81,6 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     redirect_response = redirect(to, *args, **kwargs)
     url = redirect_response['Location']
     if not skip_replace:
-        url = convert_url_to_facebook_url(url)
+        url = translate_url_to_facebook_url(url)
 
     return HttpResponse(html_template % url)

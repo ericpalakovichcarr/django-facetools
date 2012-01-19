@@ -1,6 +1,5 @@
 import urllib
 import json
-import datetime
 
 from django.conf import settings
 from facetools.common import _get_app_access_token, _create_permissions_string
@@ -8,6 +7,7 @@ from facetools.models import TestUser
 import requests
 
 class CreateTestUserError(Exception): pass
+class DeleteTestUserError(Exception): pass
 class NotATestUser(Exception): pass
 
 # -------------------------------------------------------------------------------------
@@ -88,6 +88,20 @@ def _create_test_user_in_facetools(name, facebook_data):
             test_user.save()
     else:
         raise Exception("Invalid facebook user data")
+
+def _delete_test_user_on_facebook(test_user):
+    delete_url_template = "https://graph.facebook.com/%s?method=delete&access_token=%s"
+    delete_user_url = delete_url_template % (test_user.facebook_id, _get_app_access_token())
+    r = requests.delete(delete_user_url)
+    try: rdata = json.loads(r.content)
+    except: rdata = {}
+    if r.status_code != 200:
+        try:
+            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(r.content)['error']['message']))
+        except:
+            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, r.content))
+    elif rdata == False and 'error' in rdata and 'message' in rdata['error']:
+        raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(r.content)['error']['message']))
 
 # -------------------------------------------------------------------------------------
 # Functions for creating friends between test users

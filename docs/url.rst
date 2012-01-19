@@ -1,16 +1,16 @@
 Keeping your URLs DRY in Facebook
 *********************************
 
-facetools.urls
+facetools.url
 ==============
 
-The urls module contains functions that mirror the
+The url module contains functions that mirror the
 ``django.core.urlresolvers.reverse`` and ``django.shortcuts.redirect``
 functions.
 
-.. autofunction:: facetools.urls.facebook_reverse
+.. autofunction:: facetools.url.facebook_reverse
 
-.. autofunction:: facetools.urls.facebook_redirect
+.. autofunction:: facetools.url.facebook_redirect
 
 facetools.templatetags.facetools
 ================================

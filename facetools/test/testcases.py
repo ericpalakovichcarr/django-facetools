@@ -19,13 +19,9 @@ class FacebookTestCase(TestCase):
 
         # Don't change anything if a faebook user wasn't specified
         if self.facebook_test_user:
-            facebook_user = User.objects.get(name=self.facebook_test_user)
-
-            # Add a signed_request to the request
-            oauth_token = None
-            if OAuthToken.objects.filter(pk=facebook_user.pk).count():
-                oauth_token = OAuthToken.objects.get(pk=facebook_user.pk).token
+            facebook_user = TestUser.objects.get(name=self.facebook_test_user)
             self.client.cookies['signed_request'] = _create_signed_request(
                 settings.FACEBOOK_APPLICATION_SECRET_KEY,
-                facebook_user.facebook_id, oauth_token=oauth_token
+                facebook_user.facebook_id,
+                oauth_token=facebook_user.access_token
             )

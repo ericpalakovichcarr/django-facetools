@@ -105,9 +105,9 @@ def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=No
     if page is not None and isinstance(page, dict):
         payload['page'] = page
 
-    return __create_signed_request_parameter(app_secret, json.dumps(payload))
+    return _create_signed_request_parameter(app_secret, json.dumps(payload))
 
-def __prepend_signature(app_secret, payload):
+def _prepend_signature(app_secret, payload):
         """
             Returns a SHA256 signed and base64 encoded signature based on the given payload
 
@@ -119,7 +119,7 @@ def __prepend_signature(app_secret, payload):
         dig = base64.urlsafe_b64encode(dig)
         return dig
 
-def __create_signed_request_parameter(app_secret, payload):
+def _create_signed_request_parameter(app_secret, payload):
         """
             Returns a String value usable as the Facebook signed_request parameter. The String will be based on the given payload.
             The signed_request parameter is the concatenation of a HMAC SHA-256 signature string, a period (.), and a
@@ -130,7 +130,7 @@ def __create_signed_request_parameter(app_secret, payload):
             payload -- a JSON formatted String
         """
         base64_encoded_payload = base64.urlsafe_b64encode(payload)
-        return __prepend_signature(app_secret, base64_encoded_payload) + "." + base64_encoded_payload
+        return _prepend_signature(app_secret, base64_encoded_payload) + "." + base64_encoded_payload
 
 # ---------------------------------------------------------------------
 # End snatched code by Reik Schatz.

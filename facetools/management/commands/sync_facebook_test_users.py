@@ -39,7 +39,7 @@ class Command(AppCommand):
                 )
                 facetools_user = TestUser.objects.get(name=test_user['name'])
                 facetools_user.facebook_id = facebook_response_data['id']
-                facetools_user.access_token = facebook_response_data.get('access_token', "")
+                facetools_user.access_token = facebook_response_data.get('access_token')
                 facetools_user.save()
 
             # Add test user to the local database using the test user's data on facebook
@@ -48,7 +48,7 @@ class Command(AppCommand):
                 TestUser.objects.create(
                     name         = test_user['name'],
                     facebook_id  = facebook_data['id'],
-                    access_token = facebook_data['access_token']
+                    access_token = facebook_data.get('access_token')
                 )
 
         # Get a list of each friendship between test users, no duplicates

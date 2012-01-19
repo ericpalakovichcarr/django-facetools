@@ -1,11 +1,9 @@
 import types
 
 from django.template.defaulttags import URLNode, url
-from django.template.base import Library
 from django import template
-from django.conf import settings
 
-from facetools.urls import convert_url_to_facebook_url
+from facetools.url import translate_url_to_facebook_url
 
 register = template.Library()
 
@@ -39,5 +37,5 @@ def replacement_URLNode_render_method(self, context):
     # NOTE: Pretend this method exists inside the URLNode class (because when it's called it will be)
     url_str = self.old_render(context)
     if url_str:
-        url_str = convert_url_to_facebook_url(url_str)
+        url_str = translate_url_to_facebook_url(url_str)
     return url_str

@@ -27,7 +27,7 @@ Table of Contents
    :maxdepth: 2
 
    installation
-   urls
+   url
    testusers
    testcase
 

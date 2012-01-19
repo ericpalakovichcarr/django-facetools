@@ -8,6 +8,7 @@ from django.conf import settings
 
 from facetools.management.commands.sync_facebook_test_users import _get_test_user_relationships
 from facetools.common import _get_app_access_token
+from facetools.test.common import _delete_test_user_on_facebook
 from facetools.models import TestUser
 
 class SyncFacebookTestUsersTests(TestCase):
@@ -62,6 +63,7 @@ class SyncFacebookTestUsersTests(TestCase):
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
         self.assertEquals(test_users[0]['name'], user.name)
+        self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_overwrite_one_user(self):
         from test_project.testapp1.facebook_test_users import facebook_test_users
@@ -87,6 +89,7 @@ class SyncFacebookTestUsersTests(TestCase):
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
+        self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_creating_many_users(self):
         from test_project.testapp2.facebook_test_users import facebook_test_users
@@ -115,12 +118,13 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_overwriting_many_users(self):
         from test_project.testapp2.facebook_test_users import facebook_test_users
         facebook_test_users = facebook_test_users()
         self.assertEquals(0, TestUser.objects.count())
-        management.call_command('sync_facebook_test_users', 'testapp2', allow_duplicate_users=True)
+        management.call_command('sync_facebook_test_users', 'testapp2')
         management.call_command('sync_facebook_test_users', 'testapp2')
 
         # Get the test user data from facebook
@@ -144,6 +148,130 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+    def test_creating_many_users_mixed_installations(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users
+        facebook_test_users = facebook_test_users()
+        self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure each test user's information on facebook is correct
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u and 'graph_permission_data' in u]))
+        for test_user in test_users:
+            for permission in test_user['permissions']:
+                self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
+            friends_on_facebook = _get_friends_on_facebook(test_user)
+            for friend_name in test_user.get('friends', []):
+                self.assertTrue(friend_name in friends_on_facebook)
+                self.assertEqual(friends_on_facebook[friend_name],
+                                 TestUser.objects.get(name=friend_name).facebook_id)
+
+        # Make sure each test user's information in Fandjango is correct
+        self.assertEquals(3, TestUser.objects.count())
+        for user in TestUser.objects.all():
+            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+    def test_overwriting_many_users_mixed_installations(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users
+        facebook_test_users = facebook_test_users()
+        self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp3')
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure each test user's information on facebook is correct
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u and 'graph_permission_data' in u]))
+        for test_user in test_users:
+            for permission in test_user['permissions']:
+                self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
+            friends_on_facebook = _get_friends_on_facebook(test_user)
+            for friend_name in test_user.get('friends', []):
+                self.assertTrue(friend_name in friends_on_facebook)
+                self.assertEqual(friends_on_facebook[friend_name],
+                                 TestUser.objects.get(name=friend_name).facebook_id)
+
+        # Make sure each test user's information in Fandjango is correct
+        self.assertEquals(3, TestUser.objects.count())
+        for user in TestUser.objects.all():
+            test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
+            self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+    def test_sync_where_in_facetools_missing_in_facebook(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users
+        facebook_test_users = facebook_test_users()
+        self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure the data looks good
+        self.assertEquals(3, TestUser.objects.count())
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+
+        # Now remove the users from facebook, leaving them in facetools database
+        for test_user in test_users:
+            _delete_test_user_on_facebook(TestUser.objects.get(name=test_user['name']))
+        self.assertEquals(3, TestUser.objects.count())
+        check_users = json.laods(requests.get(test_users_url).content)['data']
+        old_ids = [u['graph_user_data']['id'] for u in test_users]
+        self.assertTrue(not any([c['id'] in old_ids for c in check_users]))
+
+        # After syncing again the data should be back to normal
+        management.call_command('sync_facebook_test_users', 'testapp3')
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+        self.assertEquals(3, TestUser.objects.count())
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+
+    def test_sync_where_in_facebook_missing_in_facetools(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users
+        facebook_test_users = facebook_test_users()
+        self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure the data looks good
+        self.assertEquals(3, TestUser.objects.count())
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+
+        # Now remove the users from facetools, leaving them on facebook
+        for test_user in test_users:
+            TestUser.objects.delete()
+        self.assertEquals(0, TestUser.objects.count())
+        check_users = json.laods(requests.get(test_users_url).content)['data']
+        old_ids = [u['graph_user_data']['id'] for u in test_users]
+        self.assertTrue(all([c['id'] in old_ids for c in check_users]))
+
+        # After syncing again the data should be back to normal
+        management.call_command('sync_facebook_test_users', 'testapp3')
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+        self.assertEquals(3, TestUser.objects.count())
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """
@@ -173,11 +301,15 @@ def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_toke
 
     return test_users
 
+def _has_access_code(access_code):
+    return access_code is not None and len(access_code) > 0
+
 def _get_friends_on_facebook(test_user):
     friends_url = "https://graph.facebook.com/%s/friends?access_token=%s" % (test_user['graph_user_data']['id'], _get_app_access_token())
     friends_data = json.loads(requests.get(friends_url).content)
     friends = {}
-    for friend in friends_data['data']:
-        friends[friend['name']] = friend['id']
-    assert len(friends) == len(friends_data['data'])
+    if type(friends_data) is not bool and 'data' in friends_data:
+        for friend in friends_data['data']:
+            friends[friend['name']] = friend['id']
+        assert len(friends) == len(friends_data['data'])
     return friends
