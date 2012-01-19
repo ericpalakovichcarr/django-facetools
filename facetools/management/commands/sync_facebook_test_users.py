@@ -96,7 +96,7 @@ def _get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, a
             if 'error' in user_response_data:
                 raise Exception("Error retrieving data for %s: %s" % (test_user['id'], user_response_data['error']['message']))
             elif 'name' in user_response_data:
-                user_response_data['access_token'] = test_user['access_token']
+                user_response_data['access_token'] = test_user.get('access_token')
                 existing_facebook_test_users[user_response_data['name']] = user_response_data
 
     return existing_facebook_test_users

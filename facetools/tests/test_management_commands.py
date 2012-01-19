@@ -63,7 +63,7 @@ class SyncFacebookTestUsersTests(TestCase):
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
         self.assertEquals(test_users[0]['name'], user.name)
-        self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+        self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
     def test_overwrite_one_user(self):
         from test_project.testapp1.facebook_test_users import facebook_test_users
@@ -89,7 +89,7 @@ class SyncFacebookTestUsersTests(TestCase):
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
-        self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+        self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
     def test_creating_many_users(self):
         from test_project.testapp2.facebook_test_users import facebook_test_users
@@ -231,7 +231,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for test_user in test_users:
             _delete_test_user_on_facebook(TestUser.objects.get(name=test_user['name']))
         self.assertEquals(3, TestUser.objects.count())
-        check_users = json.laods(requests.get(test_users_url).content)['data']
+        check_users = json.loads(requests.get(test_users_url).content)['data']
         old_ids = [u['graph_user_data']['id'] for u in test_users]
         self.assertTrue(not any([c['id'] in old_ids for c in check_users]))
 
@@ -260,9 +260,9 @@ class SyncFacebookTestUsersTests(TestCase):
 
         # Now remove the users from facetools, leaving them on facebook
         for test_user in test_users:
-            TestUser.objects.delete()
+            TestUser.objects.all().delete()
         self.assertEquals(0, TestUser.objects.count())
-        check_users = json.laods(requests.get(test_users_url).content)['data']
+        check_users = json.loads(requests.get(test_users_url).content)['data']
         old_ids = [u['graph_user_data']['id'] for u in test_users]
         self.assertTrue(all([c['id'] in old_ids for c in check_users]))
 
