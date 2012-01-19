@@ -1,5 +1,5 @@
 import urllib
-import json
+from facetools import json
 
 from django.conf import settings
 from facetools.common import _get_app_access_token, _create_permissions_string

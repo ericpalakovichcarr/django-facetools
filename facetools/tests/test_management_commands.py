@@ -1,4 +1,4 @@
-import json
+from facetools import json
 import copy
 
 import requests
@@ -272,6 +272,48 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(3, TestUser.objects.count())
         self.assertEquals(3, len(test_users))
         self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+
+    def test_sync_where_in_facebook_and_in_facetools_but_data_not_synced(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users
+        facebook_test_users = facebook_test_users()
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure the data looks good
+        self.assertEquals(3, TestUser.objects.count())
+        self.assertEquals(3, len(test_users))
+        self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+
+        # Now change the user data on facetools, leaving them out of sync with the facebook data
+        old_values = {}
+        try:
+            for test_user in TestUser.objects.all():
+                old_values[test_user.name] = {
+                    'facebook_id': test_user.facebook_id,
+                    'access_token': test_user.access_token
+                }
+                test_user.facebook_id = "failbear"
+                test_user.access_token = "failbear"
+                test_user.save()
+
+            # After syncing again the data should be back to normal
+            management.call_command('sync_facebook_test_users', 'testapp3')
+            test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+            self.assertEquals(3, TestUser.objects.count())
+            self.assertEquals(3, len(test_users))
+            self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
+            for test_user in TestUser.objects.all():
+                self.assertNotEquals("failbear", test_user.facebook_id)
+                self.assertNotEquals("failbear", test_user.access_token)
+        finally:
+            for test_user in TestUser.objects.all():
+                test_user.facebook_id = old_values[test_user.name]['facebook_id']
+                test_user.access_token= old_values[test_user.name]['access_token']
+                test_user.save()
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """

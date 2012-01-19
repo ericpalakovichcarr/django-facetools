@@ -30,7 +30,7 @@ def _create_permissions_string(permission_list):
     return ','.join(permission_list).replace(" ", "")
 
 # ---------------------------------------------------------------------
-# Following code by Reik Schatz. Taken from Fandjango. Thanks Reik!
+# Following code originally by Reik Schatz. Taken from Fandjango. Thanks Reik!
 # http://javasplitter.blogspot.com/
 # https://github.com/reikje
 # ---------------------------------------------------------------------
@@ -59,7 +59,7 @@ def _parse_signed_request(signed_request, app_secret):
     else:
         return data
 
-def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None):
+def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None, add_default_data=True):
     """
     Returns a string that is a valid signed_request parameter specified by Facebook
     see: http://developers.facebook.com/docs/authentication/signed_request/
@@ -84,7 +84,20 @@ def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=No
         _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199, issued_at=1254459600)
 
     """
-    payload = {'user_id': user_id, 'algorithm': 'HMAC-SHA256'}
+    payload = {
+        'user_id': user_id,
+        'algorithm': 'HMAC-SHA256',
+    }
+    if add_default_data:
+        payload['expires'] = 0
+        payload['user'] = {
+            'country': 'us',
+            'locale': 'en_US',
+            'age': {
+                'min': 0,
+                'max': 150
+            }
+        }
 
     value = int(time.time())
     if issued_at is not None and (isinstance(issued_at, datetime) or isinstance(issued_at, int)):

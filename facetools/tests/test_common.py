@@ -3,9 +3,13 @@ import time
 
 from django.conf import settings
 from django.test import TestCase
-from canvas.models import ModelForTests
 
 from facetools.common import _parse_signed_request, _create_signed_request, _create_permissions_string
+
+try:
+    from canvas.models import ModelForTests
+except:
+    pass
 
 class CommonTests(TestCase):
 
@@ -46,7 +50,7 @@ class SignedRequestTests(TestCase):
 
     def test_create_signed_request(self):
         # test sending only user_id
-        signed_request_user_1 = _create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, user_id=1, issued_at=1254459601)
+        signed_request_user_1 = _create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, user_id=1, issued_at=1254459601, add_default_data=False)
         self.assertEquals(signed_request_user_1, 'Y0ZEAYY9tGklJimbbSGy2dgpYz9qZyVJp18zrI9xQY0=.eyJpc3N1ZWRfYXQiOiAxMjU0NDU5NjAxLCAidXNlcl9pZCI6IDEsICJhbGdvcml0aG0iOiAiSE1BQy1TSEEyNTYifQ==')
 
         data_user_1 = _parse_signed_request(signed_request_user_1, settings.FACEBOOK_APPLICATION_SECRET_KEY)
@@ -55,7 +59,7 @@ class SignedRequestTests(TestCase):
         self.assertEquals(data_user_1['algorithm'], 'HMAC-SHA256')
 
         # test not sending a user_id which will default to user_id 1
-        signed_request_user_2 = _create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, issued_at=1254459601)
+        signed_request_user_2 = _create_signed_request(settings.FACEBOOK_APPLICATION_SECRET_KEY, issued_at=1254459601, add_default_data=False)
         self.assertEquals(signed_request_user_1, signed_request_user_2)
 
         # test sending each available named argument
@@ -72,7 +76,7 @@ class SignedRequestTests(TestCase):
             page = {
                 'id': '1',
                 'liked': True
-            }
+            }, add_default_data=False
         )
 
         data_user_3 = _parse_signed_request(signed_request_user_3, settings.FACEBOOK_APPLICATION_SECRET_KEY)

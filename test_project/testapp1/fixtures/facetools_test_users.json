@@ -1,0 +1,10 @@
+[
+    {
+        "pk": "Unittest Smith", 
+        "model": "facetools.testuser", 
+        "fields": {
+            "access_token": "AAAESR2HSywMBAP9FbGaAMYtNK7BKQ3l4sF81dI1NCkumpoIHZCpYZBqHR2qbx0It4O8sAJrJzx2kIOOKoO69lsLx0G50p3WX1gcEROZCa2KDq72teJ7", 
+            "facebook_id": "100003407232283"
+        }
+    }
+]

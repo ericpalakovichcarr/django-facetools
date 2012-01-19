@@ -2,11 +2,13 @@ from django.conf import settings
 from django.test import TestCase
 from django.template.base import Template
 from django.template.context import Context
-from canvas.models import ModelForTests
 
 from facetools.url import facebook_reverse, facebook_redirect, translate_url_to_facebook_url
 
-from canvas.models import ModelForTests
+try:
+    from canvas.models import ModelForTests
+except:
+    pass
 
 class UrlTests(TestCase):
 

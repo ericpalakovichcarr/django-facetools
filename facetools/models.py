@@ -8,6 +8,7 @@ class TestUser(models.Model):
     facebook_id = models.CharField(max_length=255, null=True, blank=True)
     access_token = models.CharField(max_length=255, null=True, blank=True)
 
+
     def delete(self, *args, **kwargs):
         from facetools.test.common import _delete_test_user_on_facebook # avoiding circular dependency
         if self.facebook_id:

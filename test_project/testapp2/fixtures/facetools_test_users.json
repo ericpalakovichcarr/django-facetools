@@ -1,0 +1,26 @@
+[
+    {
+        "pk": "Unittest Jacobs", 
+        "model": "facetools.testuser", 
+        "fields": {
+            "access_token": "AAAESR2HSywMBACh5YoQemEtrQxSsf7klmfkhs7nssKX2viGAbZBkAFtZCrhC42fWT2eKDFXK8JfXe3OxZAad4mGzzJH8rCAgLK8u8Id2iivEVnUoMBi", 
+            "facebook_id": "100003370932768"
+        }
+    }, 
+    {
+        "pk": "Unittest Deschain", 
+        "model": "facetools.testuser", 
+        "fields": {
+            "access_token": "AAAESR2HSywMBAFoxM4yRLD5NyZCP8MRSGy9oC0nw3168ZChng7zoQqqkvGsq0iLJhriSZAZCZC712PlWcTmyBb80mKVysMI2S1sNn1ETQMJljt4H94GOL", 
+            "facebook_id": "100003355272837"
+        }
+    }, 
+    {
+        "pk": "Unittest Billows", 
+        "model": "facetools.testuser", 
+        "fields": {
+            "access_token": "AAAESR2HSywMBANIBZAVB7mMZATEi37fo1OHzFSGltDSYmZC5IO1ZBok7VaIodWcMyNCHFXreqfSBjwMV68LhaZBZBR5y0hMGSQ8mVclRgZCx7yyTT9oJBGq", 
+            "facebook_id": "100003392202277"
+        }
+    }
+]

@@ -1,6 +1,8 @@
-from optparse import make_option
-import json
+import os
+import sys
+from facetools import json
 
+from django.core import management
 from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
@@ -51,16 +53,32 @@ class Command(AppCommand):
                     access_token = facebook_data.get('access_token')
                 )
 
+            # Sync the existing user with the latest facebook information
+            else:
+                facebook_data = existing_facebook_test_users[test_user['name']]
+                facetools_user = TestUser.objects.get(name=test_user['name'])
+                facetools_user.facebook_id = facebook_data['id']
+                facetools_user.access_token = facebook_data.get('access_token')
+                facetools_user.save()
+
         # Get a list of each friendship between test users, no duplicates
         friendships = [list(r) for r in _get_test_user_relationships(test_users)]
         for friendship in friendships:
             friendship = list(friendship)
             _friend_test_users(friendship[0], friendship[1])
 
+        # Create the fixture for the test users
+        fixture_file_path = os.path.join(_get_app_fixture_directory(app), "facetools_test_users.json")
+        old_stdout = sys.stdout
+        sys.stdout = open(fixture_file_path,'w')
+        management.call_command('dumpdata', 'facetools', indent=4)
+        f=sys.stdout
+        sys.stdout=old_stdout
+        f.close()
+
 def _get_facetools_test_users(app_name, test_user_module_name='facebook_test_users'):
     """Get the dictionary of facebook test users for the app, throwing an error if the app
     doesn't have any defined."""
-
     try:
         _temp = __import__(app_name, globals(), locals(), [test_user_module_name])
         facetools_test_users = _temp.facebook_test_users.facebook_test_users
@@ -116,3 +134,16 @@ def _get_test_user_relationships(test_users):
         if relationship not in no_dupes:
             no_dupes.append(relationship)
     return no_dupes
+
+def _get_app_fixture_directory(app):
+    """
+    Gets the fixture directory for the app, creating it if it doesn't exist.
+    """
+    app_dir = os.path.dirname(app.__file__)
+    fixture_dir = os.path.join(app_dir, "fixtures")
+    if os.path.exists(fixture_dir):
+        if not os.path.isdir(fixture_dir):
+            raise IOError("Can't create a fixture directory for %s.  File already exists." % app.__package__)
+    else:
+        os.mkdir(fixture_dir)
+    return fixture_dir
