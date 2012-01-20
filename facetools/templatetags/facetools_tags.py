@@ -32,7 +32,7 @@ facebook_url = register.tag(facebook_url)
 def replacement_URLNode_render_method(self, context):
     """
     Replacement for the URLNode's render method.  It's monkey patched into
-    a URLNode instance in the fb_url tag.
+    a URLNode instance in the facebook_url tag.
     """
     # NOTE: Pretend this method exists inside the URLNode class (because when it's called it will be)
     url_str = self.old_render(context)
