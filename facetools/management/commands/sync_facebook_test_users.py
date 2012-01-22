@@ -8,6 +8,7 @@ from django.conf import settings
 import requests
 
 from facetools.test.testusers import _create_test_user, _friend_test_users, _create_test_user_on_facebook
+from facetools.signals import sync_facebook_test_user
 from facetools.models import TestUser
 
 class Command(AppCommand):
@@ -24,6 +25,7 @@ class Command(AppCommand):
         # Create any test users on facebook their corresponding User models in facetools
         # that don't exist on facebook yet.
         for test_user in test_users:
+
             # Add user to facebook and local database
             if test_user['name'] not in existing_test_users:
                 _create_test_user(
@@ -63,6 +65,8 @@ class Command(AppCommand):
                 facetools_user.access_token = facebook_data.get('access_token')
                 facetools_user.login_url = facebook_data.get('login_url')
                 facetools_user.save()
+
+            sync_facebook_test_user.send(sender=None, test_user=TestUser.objects.get(name=test_user['name']))
 
         # Get a list of each friendship between test users, no duplicates
         friendships = [list(r) for r in _get_test_user_relationships(test_users)]

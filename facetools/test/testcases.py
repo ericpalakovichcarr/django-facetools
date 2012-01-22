@@ -2,6 +2,7 @@ from django.test.testcases import TestCase
 from django.conf import settings
 from facetools.models import TestUser
 from facetools.common import _create_signed_request
+from facetools.signals import sync_facebook_test_user, setup_facebook_test_client
 
 # TODO: Add class that subclasses TransactionTestCase as well
 
@@ -12,7 +13,6 @@ class FacebookTestCase(TestCase):
     attached to this object (i.e. self.client).
     """
     facebook_test_user = None
-    facebook_stop_sync_middleware = True
 
     def _pre_setup(self):
         if self.facebook_test_user:
@@ -22,34 +22,18 @@ class FacebookTestCase(TestCase):
                 self.fixtures.append('facetools_test_users.json')
             super(FacebookTestCase, self)._pre_setup()
 
+            # Make sure anybody that needs to sync their models loaded from fixtures
+            # has a chance to do so now that the refreshed user test data is available.
+            for test_user in TestUser.objects.all():
+                sync_facebook_test_user.send(sender=None, test_user=test_user)
+
+            # Allow code to configure the test client so it has a signed request
+            # of the specified test user for each request
             facebook_user = TestUser.objects.get(name=self.facebook_test_user)
-
-            # TODO: Make this customizable
-            from fandjango.models import User
-            try:
-                name_parts = facebook_user.name.split(" ")
-                first_name = name_parts[0]
-                last_name = name_parts[-1]
-                middle_name = None
-                if len(name_parts) < 2:
-                    middle_name = " ".join(name_parts[1:-1])
-                db_user = User.objects.get(
-                    first_name=first_name,
-                    middle_name=middle_name,
-                    last_name=last_name)
-                db_user.facebook_id = int(facebook_user.facebook_id)
-                db_user.oauth_token.token = facebook_user.access_token
-                db_user.save()
-            except User.DoesNotExist:
-                pass
-
-            # Setup a signed request for the test client, so that any requests
-            # made with the client will behave like the test user activated it
-            # from facebook
-            self.client.cookies['signed_request'] = _create_signed_request(
+            setup_facebook_test_client.send(client=self.client, signed_request=create_signed_request(
                 settings.FACEBOOK_APPLICATION_SECRET_KEY,
                 facebook_user.facebook_id,
                 oauth_token=facebook_user.access_token
-            )
+            ))
         else:
             super(FacebookTestCase, self)._pre_setup()
