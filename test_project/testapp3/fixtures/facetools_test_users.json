@@ -4,23 +4,26 @@
         "model": "facetools.testuser", 
         "fields": {
             "access_token": null, 
-            "facebook_id": "100003384462372"
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003375796993&n=TBvBODEEr9lWevd", 
+            "facebook_id": "100003375796993"
         }
     }, 
     {
         "pk": "Unittest Deschain", 
         "model": "facetools.testuser", 
         "fields": {
-            "access_token": "AAAESR2HSywMBAHAJFl9PKyu9c6DqpB6b4WrOEgDV0tDXvmf2r75EZC8RMmXQnLPmRPfu5BFZAxC13a0pxdnuACz3IugRVUVVazvItxGZBrFZBLwW5isS", 
-            "facebook_id": "100003394032469"
+            "access_token": "AAAESR2HSywMBADmGZBNH0CP6Q2FmZBJwZCIxad8RYfpZBzjZBmsCAUdN46Rr0QLFasvGYvI0lfMFEOAZCL2mVZBnVTBgOyWIACQGDeUSuRmusj7KNtrwtus", 
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003377446844&n=3m630YxII863tmx", 
+            "facebook_id": "100003377446844"
         }
     }, 
     {
         "pk": "Unittest Billows", 
         "model": "facetools.testuser", 
         "fields": {
-            "access_token": "AAAESR2HSywMBAHXzTAoGy4ppNUoA7ZAjDPd1EdnzDW2DoJ5gZAH2yjHCvY68g2fCI8gitj9aZBZBaqZBh8OPi75RqcSq9ZA2Lw2IpIxeI4jdGBfvoCzjlP", 
-            "facebook_id": "100003383622285"
+            "access_token": "AAAESR2HSywMBAOB1mUpXamru97lBZBAzZCtrN4Cz9G1zGR8YNm3MvCyzCYbhTK5PxZAPGZCVUpd3fZAK6oarhv00I00xKQ9XvU9ianpN7xRG1QStzTRUG", 
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003385306416&n=6O9qe3MokXeknbN", 
+            "facebook_id": "100003385306416"
         }
     }
 ]

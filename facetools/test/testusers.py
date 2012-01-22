@@ -78,13 +78,16 @@ def _create_test_user_in_facetools(name, facebook_data):
         except TestUser.DoesNotExist:
             test_user = None
         if test_user is None:
-            test_user = TestUser.objects.create(
+            assert facebook_data['id'] is not None # This should never happen, so please freak out when it does
+            TestUser.objects.create(
                 name=name,
                 facebook_id=str(facebook_data['id']),
-                access_token=str(facebook_data.get('access_token', ""))
+                access_token=facebook_data.get('access_token'),
+                login_url=facebook_data.get('login_url')
             )
         else:
-            test_user.access_token = str(facebook_data.get('access_token', ""))
+            test_user.access_token = facebook_data.get('access_token')
+            test_user.login_url = facebook_data.get('login_url')
             test_user.save()
     else:
         raise Exception("Invalid facebook user data")

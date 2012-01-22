@@ -3,24 +3,27 @@
         "pk": "Unittest Jacobs", 
         "model": "facetools.testuser", 
         "fields": {
-            "access_token": "AAAESR2HSywMBACh5YoQemEtrQxSsf7klmfkhs7nssKX2viGAbZBkAFtZCrhC42fWT2eKDFXK8JfXe3OxZAad4mGzzJH8rCAgLK8u8Id2iivEVnUoMBi", 
-            "facebook_id": "100003370932768"
+            "access_token": "AAAESR2HSywMBAKB5hR0OhHdijHHfD7cZAcXpUktiXVLzuqlTbeG9ajOpci1zlXhFdDflvYYNqpJZC3iGzZChUZBalI0d9FaDck7r4NdGet5uZBsDZBNmi5", 
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003370157139&n=cL9PXFrrs8kEqE9", 
+            "facebook_id": "100003370157139"
         }
     }, 
     {
         "pk": "Unittest Deschain", 
         "model": "facetools.testuser", 
         "fields": {
-            "access_token": "AAAESR2HSywMBAFoxM4yRLD5NyZCP8MRSGy9oC0nw3168ZChng7zoQqqkvGsq0iLJhriSZAZCZC712PlWcTmyBb80mKVysMI2S1sNn1ETQMJljt4H94GOL", 
-            "facebook_id": "100003355272837"
+            "access_token": "AAAESR2HSywMBAM3UPuhZC8Q6R8binPc9fq6uhgm4ioZCB73Exb1hR4kcveJzuodCt7Ym0ZAsI7ZBs5rNYQyXj7EtTUwgecVsdJ8vu09BG6hX5ixowGxU", 
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003368567323&n=I57tfQE5sFgrMLG", 
+            "facebook_id": "100003368567323"
         }
     }, 
     {
         "pk": "Unittest Billows", 
         "model": "facetools.testuser", 
         "fields": {
-            "access_token": "AAAESR2HSywMBANIBZAVB7mMZATEi37fo1OHzFSGltDSYmZC5IO1ZBok7VaIodWcMyNCHFXreqfSBjwMV68LhaZBZBR5y0hMGSQ8mVclRgZCx7yyTT9oJBGq", 
-            "facebook_id": "100003392202277"
+            "access_token": "AAAESR2HSywMBAOWMZBFVSA8L76cqazkHhZCdyQ103OFFmnFkaBZC16g71VrkzZBaBe49lzgdTtTfnIlXUiRaDv33u5su1Xip9v4rRRwFeuHk1KJaInoD", 
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003405076531&n=yTpz1jX9ep0LCRZ", 
+            "facebook_id": "100003405076531"
         }
     }
 ]

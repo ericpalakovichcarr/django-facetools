@@ -8,7 +8,7 @@ from django.conf import settings
 
 from facetools.management.commands.sync_facebook_test_users import _get_test_user_relationships
 from facetools.common import _get_app_access_token
-from facetools.test.common import _delete_test_user_on_facebook
+from facetools.test.testusers import _delete_test_user_on_facebook
 from facetools.models import TestUser
 
 class SyncFacebookTestUsersTests(TestCase):
@@ -61,8 +61,9 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure the test user's information in Fandjango is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
-        self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
+        self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
         self.assertEquals(test_users[0]['name'], user.name)
+        self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
     def test_overwrite_one_user(self):
@@ -87,8 +88,9 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure the test user's information in Fandjango is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
-        self.assertEquals(test_users[0]['graph_user_data']['id'], str(user.facebook_id))
+        self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
+        self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
     def test_creating_many_users(self):
@@ -118,6 +120,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_overwriting_many_users(self):
@@ -148,6 +151,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_creating_many_users_mixed_installations(self):
@@ -178,6 +182,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_overwriting_many_users_mixed_installations(self):
@@ -209,6 +214,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
     def test_sync_where_in_facetools_missing_in_facebook(self):
@@ -333,6 +339,7 @@ def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_toke
             for facebook_test_user in facebook_test_users:
                 if user_data and 'name' in user_data and facebook_test_user['name'] == user_data['name']:
                     facebook_test_user['graph_user_data'] = user_data
+                    facebook_test_user['graph_user_data']['login_url'] = graph_test_user['login_url']
                     facebook_test_user['graph_permission_data'] = permissions_data if 'data' in permissions_data else None
 
     # Remove any test users that didn't recieve any data from open graph

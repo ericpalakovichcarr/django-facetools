@@ -21,6 +21,7 @@ INSTALLED_APPS = (
     'facetools',
     'south',
     'django_extensions',
+    'facetools_tests',
     'canvas',
     'testapp1',
     'testapp2',

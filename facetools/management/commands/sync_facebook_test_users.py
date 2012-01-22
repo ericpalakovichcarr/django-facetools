@@ -7,7 +7,7 @@ from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
 
-from facetools.test.common import _create_test_user, _friend_test_users, _create_test_user_on_facebook
+from facetools.test.testusers import _create_test_user, _friend_test_users, _create_test_user_on_facebook
 from facetools.models import TestUser
 
 class Command(AppCommand):
@@ -29,7 +29,7 @@ class Command(AppCommand):
                 _create_test_user(
                     app_installed = test_user.get('installed', True),
                     name          = test_user['name'],
-                    permissions   = test_user.get('permissions'),
+                    permissions   = test_user.get('permissions')
                 )
 
             # Add test user to facebook and sync with existing test user in the local database
@@ -42,6 +42,7 @@ class Command(AppCommand):
                 facetools_user = TestUser.objects.get(name=test_user['name'])
                 facetools_user.facebook_id = facebook_response_data['id']
                 facetools_user.access_token = facebook_response_data.get('access_token')
+                facetools_user.login_url = facebook_response_data.get('login_url')
                 facetools_user.save()
 
             # Add test user to the local database using the test user's data on facebook
@@ -50,7 +51,8 @@ class Command(AppCommand):
                 TestUser.objects.create(
                     name         = test_user['name'],
                     facebook_id  = facebook_data['id'],
-                    access_token = facebook_data.get('access_token')
+                    access_token = facebook_data.get('access_token'),
+                    login_url    = facebook_data.get('login_url')
                 )
 
             # Sync the existing user with the latest facebook information
@@ -59,6 +61,7 @@ class Command(AppCommand):
                 facetools_user = TestUser.objects.get(name=test_user['name'])
                 facetools_user.facebook_id = facebook_data['id']
                 facetools_user.access_token = facebook_data.get('access_token')
+                facetools_user.login_url = facebook_data.get('login_url')
                 facetools_user.save()
 
         # Get a list of each friendship between test users, no duplicates
@@ -115,6 +118,7 @@ def _get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, a
                 raise Exception("Error retrieving data for %s: %s" % (test_user['id'], user_response_data['error']['message']))
             elif 'name' in user_response_data:
                 user_response_data['access_token'] = test_user.get('access_token')
+                user_response_data['login_url'] = test_user.get('login_url')
                 existing_facebook_test_users[user_response_data['name']] = user_response_data
 
     return existing_facebook_test_users
