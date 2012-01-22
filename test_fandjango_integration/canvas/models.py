@@ -1,0 +1,5 @@
+from facetools.signals import sync_facebook_test_user, setup_facebook_test_client
+from facetools.integrations import fandjango
+
+sync_facebook_test_user.connect(fandjango.sync_facebook_test_user)
+setup_facebook_test_client.connect(fandjango.setup_facebook_test_client)

@@ -3,7 +3,6 @@ from facetools import json
 
 from django.conf import settings
 from facetools.common import _get_app_access_token, _create_permissions_string
-from facetools.signals import pre_friend_test_users, post_friend_test_users
 from facetools.models import TestUser
 import requests
 

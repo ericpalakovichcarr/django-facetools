@@ -1,4 +1,6 @@
 FACEBOOK_APPLICATION_ID = '301572769893123'
+FACEBOOK_APPLICATION_NAMESPACE = 'django-facetools'
+FACEBOOK_APPLICATION_INITIAL_PERMISSIONS = ['read_stream', 'user_birthday', 'user_hometown']
 FACEBOOK_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
 FACEBOOK_CANVAS_URL = "http://localhost:8000/canvas/"
 from FACEBOOK_APPLICATION_SECRET_KEY import *
@@ -24,14 +26,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'fandjango',
     'facetools',
     'south',
     'django_extensions',
-    'facetools_tests',
     'canvas',
-    'testapp1',
-    'testapp2',
-    'testapp3',
 )
 
 # ----------------------------------------------------------------------------#
@@ -44,6 +43,7 @@ TEMPLATE_LOADERS = ('django.template.loaders.filesystem.Loader', 'django.templat
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'fandjango.middleware.FacebookMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -83,4 +83,4 @@ STATIC_ROOT = ''
 STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 SECRET_KEY = 'w@i*cet*i!yt$adhlekx(mn^l!4kk5ps4g%6s2ypp2s*a+%2jk'
-ROOT_URLCONF = 'test_project.urls'
+ROOT_URLCONF = 'test_fandjango_integration.urls'

@@ -25,6 +25,7 @@ class Command(AppCommand):
         # Create any test users on facebook their corresponding User models in facetools
         # that don't exist on facebook yet.
         for test_user in test_users:
+            print 'Syncing %s' % test_user['name']
 
             # Add user to facebook and local database
             if test_user['name'] not in existing_test_users:
@@ -72,10 +73,12 @@ class Command(AppCommand):
         friendships = [list(r) for r in _get_test_user_relationships(test_users)]
         for friendship in friendships:
             friendship = list(friendship)
+            print 'Friending %s and %s' % (friendship[0], friendship[1])
             _friend_test_users(friendship[0], friendship[1])
 
         # Create the fixture for the test users
         fixture_file_path = os.path.join(_get_app_fixture_directory(app), "facetools_test_users.json")
+        print 'Creating fixture for test users at %s' % fixture_file_path
         old_stdout = sys.stdout
         sys.stdout = open(fixture_file_path,'w')
         management.call_command('dumpdata', 'facetools', indent=4)

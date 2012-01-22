@@ -30,7 +30,7 @@ class FacebookTestCase(TestCase):
             # Allow code to configure the test client so it has a signed request
             # of the specified test user for each request
             facebook_user = TestUser.objects.get(name=self.facebook_test_user)
-            setup_facebook_test_client.send(client=self.client, signed_request=create_signed_request(
+            setup_facebook_test_client.send(sender=None, client=self.client, signed_request=_create_signed_request(
                 settings.FACEBOOK_APPLICATION_SECRET_KEY,
                 facebook_user.facebook_id,
                 oauth_token=facebook_user.access_token
