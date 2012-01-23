@@ -24,4 +24,4 @@ tag.
 Examples
 ========
 
-TODO: Make examples
+Coming soon.

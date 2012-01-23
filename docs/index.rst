@@ -19,6 +19,8 @@ Features:
 * ``FacebookTestCase`` can be used in place of Django's ``TestCase``. Just
   specify a test user, much like a fixture, and requests to the test client
   will contain a valid signed_request for the test user.
+* Integration with other facebook django packages, supporting the following (with more to come):
+  * Fandjango
 
 Table of Contents
 =================
@@ -30,6 +32,7 @@ Table of Contents
    url
    testusers
    testcase
+   signals_and_integrations
 
 Indices and tables
 ==================
