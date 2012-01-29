@@ -226,8 +226,8 @@ following values for your app settings:
 
 In the *Select how your app integrates with Facebook* section, click the checkmark
 next to *App on Facebook*.  Next enter `https://localhost:8443` for the *Secure Canvas
-URL*.  Facebook now require all canvas apps to be served via SSL, so we're going to
-leave the *Canvas URL* setting blank.
+URL* (you'll see why soon).  Facebook now requires all canvas apps to be served via SSL,
+so we're going to leave the *Canvas URL* setting blank.
 
 Finally click the *Save changes* button to create your app!
 
@@ -240,9 +240,13 @@ requires an SSL connection, we can't tell facebook to use our `manage.py runserv
 at http://localhost:8000, since it's not secure.  We're going to get around this by
 using an application called Stunnel, which will let us setup an SSL connection locally.
 
-First install stunnel.
+First install stunnel:
 
-Next, Assuming your still in the `mysite` directory on the command line, run the following::
+* If you're on Windows, just grab the installer.exe from ftp://ftp.stunnel.org/stunnel/.
+* Linux of OSX, download the tarball from ftp://ftp.stunnel.org/stunnel/.  Then unzip,
+  cd into the directory, and do the `sudo ./configure`. `sudo make`. `sudo make install` dance.
+
+Next, get back to the `mysite` directory on the command line and run the following::
 
     $ cd ../stunnel_cfg
     $ stunnel dev_https
@@ -257,7 +261,7 @@ Seperate your canvas app from the admin
 ---------------------------------------
 
 Next, we want to make sure the admin section of our site isn't availalble
-from the facebook app.  We're going to modify the root urls.py in the `mysite`
+from the facebook app.  We're going to modify the root `urls.py` in the `mysite`
 directory so the polls app is reached from /canvas/
 (e.g. https:localhost:8443/canvas/polls/poll/1/)/  We're going to change
 one line from this::
@@ -285,10 +289,74 @@ Ok, go to your app url.  First, bring your server back up::
 
     $ python manage.py runserver
 
-Then open your facebook canvas app in your browser.  The url will be
-something like https://apps.facebook.com/your-app-namespace.
+Then open polls via your facebook canvas app in your browser.  The url will be
+something like https://apps.facebook.com/your-app-namespace/polls/.  You
+should be greeted with a CSRF token error page.  This happens because facebook
+sends a POST to our app with the signed request you read about earlier in the
+facebook docs.
 
-** NOTES **
+This causes Django to complain because we have the `CsrfViewMiddleware` installed,
+which looks for a CSRF token in any post request to prevent cross-site request forgery
+attacks.  Time to bring out Fandjango.
 
-- Create middleware that automatically creates a top.location
-  redirect for requests that came from a redirect to a canvas page.
+Installing and configuring Fandjango
+------------------------------------
+
+Assuming you installed the requirments file, Fandjango should already available in your virtualenv.
+
+Setting up Fandjango is easy.  In `settings.py`:
+
+# Add `fandjango` to your `INSTALLED_APPS`
+# Add `fandjango.middleware.FacebookMiddleware` to your `MIDDLEWARE_CLASSES`, before the CSRF middleware.
+`MIDDLEWARE_CLASSES` should end up looking like this::
+
+    MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'fandjango.middleware.FacebookMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+    )
+
+# Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
+
+    FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
+    FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
+    FACEBOOK_APPLICATION_NAMESPACE = "your-app-namespace"
+
+# Finally, run `syncdb` again to add the Fandjango tables::
+
+    $ python manage.py syncdb
+
+Now let's visit your page again.  You should see the poll page in all it's glory.
+Now visit https://localhost:8443/admin.  Your admin page is also available and
+seperate from the facebook page.
+
+Using Facetools to let your app play nice Facebook's iframe
+===========================================================
+
+Ok, so now we have our Django app running as a Facebook canvas app.  But there are a few
+problems that persist.
+
+# The links for each poll read like https://localhost:8443/canvas/polls/1
+instead of https://apps.facebook.com/facetools-example/polls/1.
+# When you click on a poll it goes to the page, but the browsers address bar doesn't update.
+# When you vote in the poll you get an error.  If you check the choice you vote for
+you can see it's votes are going up with each vote, so the error happens after the vote is recorded.
+
+We're going to solve all these problems using Facetools.  Do the following:
+
+# Add 'facetools' to your `INSTALLED_APPS` in the `settings.py` file.
+# Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
+
+    # existing settings you've already entered, and are required by facetools
+    FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
+    FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
+
+    # New settings you're adding now
+    FACEBOOK_CANVAS_PAGE = "Your canvas page here"
+    FACEBOOK_CANVAS_URL = "The value from Secure Canvas URL here"
+
+# Add `{% load facetools_tags %}` to the top of all three template *.html files.
+#
