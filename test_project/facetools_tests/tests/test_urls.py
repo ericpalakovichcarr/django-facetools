@@ -4,11 +4,7 @@ from django.template.base import Template
 from django.template.context import Context
 
 from facetools.url import facebook_reverse, facebook_redirect, translate_url_to_facebook_url
-
-try:
-    from canvas.models import ModelForTests
-except:
-    pass
+from canvas.models import ModelForTests
 
 class UrlTests(TestCase):
 
@@ -24,21 +20,55 @@ class UrlTests(TestCase):
         settings.FACEBOOK_CANVAS_URL = self.old_canvas_url
         self.test_model.delete()
 
-    def test_convert_url_to_facebook_url(self):
-        expected_url = "https://apps.facebook.com/django-facetools/view/"
-
-        # Test every combination of urls that could be set
+    def assert_url_translations(self, expected_url, urls_to_convert):
         values = (
             ("https://apps.facebook.com/django-facetools/", "https://apps.facebook.com/django-facetools"),
-            ("http://localhost:8000/canvas/", "http://localhost:8000/canvas"),
-            ("/canvas/view/", "/canvas/view", "http://localhost:8000/canvas/view/", "http://localhost:8000/canvas/view")
+            ("http://localhost:8000/canvas/", "http://localhost:8000/canvas")
         )
         for facebook_canvas_page in values[0]:
             for facebook_canvas_url in values[1]:
-                for url_to_convert in values[2]:
+                for url_to_convert in urls_to_convert:
                     settings.FACEBOOK_CANVAS_PAGE = facebook_canvas_page
                     settings.FACEBOOK_CANVAS_URL = facebook_canvas_url
                     self.assertEquals(expected_url, translate_url_to_facebook_url(url_to_convert))
+
+    def test_translate_url_to_facebook_url(self):
+        # Test plain urls
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view/",
+            ("/canvas/view/", "http://localhost:8000/canvas/view/")
+        )
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view",
+            ("/canvas/view", "http://localhost:8000/canvas/view")
+        )
+        # Test urls with get parameters
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view/?hi=hey&ho=peter",
+            ("/canvas/view/?hi=hey&ho=peter", "http://localhost:8000/canvas/view/?hi=hey&ho=peter")
+        )
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view?hi=hey&ho=peter",
+            ("/canvas/view?hi=hey&ho=peter", "http://localhost:8000/canvas/view?hi=hey&ho=peter")
+        )
+        # Test urls with fragments
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view/#bells",
+            ("/canvas/view/#bells", "http://localhost:8000/canvas/view/#bells")
+        )
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view#bells",
+            ("/canvas/view#bells", "http://localhost:8000/canvas/view#bells")
+        )
+        # Test urls with get parameters and fragments
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view/?hi=hey&ho=peter#bells",
+            ("/canvas/view/?hi=hey&ho=peter#bells", "http://localhost:8000/canvas/view/?hi=hey&ho=peter#bells")
+        )
+        self.assert_url_translations(
+            "https://apps.facebook.com/django-facetools/view?hi=hey&ho=peter#bells",
+            ("/canvas/view?hi=hey&ho=peter#bells", "http://localhost:8000/canvas/view?hi=hey&ho=peter#bells")
+        )
 
         # Test that URLS outside of the canvas don't get converted
         url = "http://google.com"

@@ -26,8 +26,8 @@ def translate_url_to_facebook_url(url):
     if facebook_url.endswith('/'): facebook_url = facebook_url[:-1]
     new_path = url_parts.path.replace(canvas_parts.path, '')
     if not new_path.startswith('/'): new_path = '/%s' % new_path
-    if not new_path.endswith('/'): new_path = '%s/' % new_path
-    return '%s%s' % (facebook_url, new_path)
+    full_new_path = url[url.index(new_path):]
+    return '%s%s' % (facebook_url, full_new_path)
 
 def facebook_reverse(*args, **kwargs):
     """
