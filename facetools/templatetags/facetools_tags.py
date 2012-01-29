@@ -1,16 +1,16 @@
 import types
 
-from django.template.defaulttags import URLNode, url as django_url
+from django.template.defaulttags import URLNode, url
 from django import template
 
 from facetools.url import translate_url_to_facebook_url
 
 register = template.Library()
 
-def url(parser, token):
+def facebook_url(parser, token):
     """
     Works exactly like the default url tag, except the final url is replaced
-    with its facebook canvas equivalent.
+    with its facebook canvas equivalent if it's in the canvas app.
 
     Refer to https://docs.djangoproject.com/en/1.3/ref/templates/builtins/#url
     for more information on how to use this tag.
@@ -20,14 +20,14 @@ def url(parser, token):
     # function handles generating the proper url.  We're going to move the
     # the render method and replace it with a new render method.  The new
     # method will call the old one and then adjust the url before returning.
-    URLNode_obj = django_url(parser, token)
+    URLNode_obj = url(parser, token)
     URLNode_obj.old_render = URLNode_obj.render
     URLNode_obj.render = types.MethodType(
         replacement_URLNode_render_method,
         URLNode_obj,
         URLNode)
     return URLNode_obj
-facebook_url = register.tag(url)
+facebook_url = register.tag(facebook_url)
 
 def replacement_URLNode_render_method(self, context):
     """

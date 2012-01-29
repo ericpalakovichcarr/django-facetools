@@ -358,5 +358,16 @@ We're going to solve all these problems using Facetools.  Do the following:
     FACEBOOK_CANVAS_PAGE = "Your canvas page here"
     FACEBOOK_CANVAS_URL = "The value from Secure Canvas URL here"
 
-# Add `{% load facetools_tags %}` to the top of all three template *.html files.
-#
+# Add `{% load facetools_tags %}` to the top of all three template *.html files.  This will replace
+Django's url tag with Facetools' url tag, which converts urls that occur within the canvas app
+to their facebook counterparts.
+
+# Add a target of `_top` to each anchor tag in our templates::
+
+    # In index.html
+    <a href="{% url poll_detail poll.id %}" target="_top">{{ poll.question }}</a>
+
+    # In results.html
+    <a href="{% url poll_detail poll.id %}" target="_top">Vote again?</a>
+
+# Set the

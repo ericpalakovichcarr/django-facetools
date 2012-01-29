@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.template.base import Template
 from django.template.context import Context
 
-from facetools.url import reverse, redirect, translate_url_to_facebook_url
+from facetools.url import facebook_reverse, facebook_redirect, translate_url_to_facebook_url
 from canvas.models import ModelForTests
 
 class UrlTests(TestCase):
@@ -101,26 +101,26 @@ class UrlTests(TestCase):
         self.assertNotEquals(url, translate_url_to_facebook_url(url))
 
     def test_view_name_reverse(self):
-        url = reverse('canvas:test_url')
+        url = facebook_reverse('canvas:test_url')
         self.assertEquals('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, url)
 
     def test_full_url_redirect(self):
-        response = redirect("http://www.google.com")
+        response = facebook_redirect("http://www.google.com")
         self.assertEquals(response.status_code, 200)
         self.assertIn('http://www.google.com', response.content)
 
     def test_full_local_url_redirect(self):
-        response = redirect('http://localhost:8000/canvas/test_url/')
+        response = facebook_redirect('http://localhost:8000/canvas/test_url/')
         self.assertEquals(response.status_code, 200)
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, response.content)
 
     def test_model_url_redirect(self):
-        response = redirect(self.test_model)
+        response = facebook_redirect(self.test_model)
         self.assertEquals(response.status_code, 200)
         self.assertIn('%s/test_model/%s/' % (settings.FACEBOOK_CANVAS_PAGE, self.test_model.id), response.content)
 
     def test_view_name_redirect(self):
-        response = redirect('canvas:test_url')
+        response = facebook_redirect('canvas:test_url')
         self.assertEquals(response.status_code, 200)
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, response.content)
 
@@ -139,16 +139,16 @@ class FacebookUrlTests(TestCase):
         settings.FACEBOOK_CANVAS_URL = self.old_canvas_url
 
     def test_url_by_view_name(self):
-        t = Template("{% load facetools_tags %}{% url canvas:test_url %}")
+        t = Template("{% load facetools_tags %}{% facebook_url canvas:test_url %}")
         content = t.render(Context())
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, content)
 
     def test_url_by_view_name_with_args(self):
-        t = Template("{% load facetools_tags %}{% url canvas:test_model " + str(self.test_model.id) + " %}")
+        t = Template("{% load facetools_tags %}{% facebook_url canvas:test_model " + str(self.test_model.id) + " %}")
         content = t.render(Context())
         self.assertIn('%s/test_model/%s/' % (settings.FACEBOOK_CANVAS_PAGE, self.test_model.id), content)
 
     def test_using_as_with_tag(self):
-        t = Template("{% load facetools_tags %}{% url canvas:test_model model_id=" + str(self.test_model.id) + " %}")
+        t = Template("{% load facetools_tags %}{% facebook_url canvas:test_model model_id=" + str(self.test_model.id) + " %}")
         content = t.render(Context())
         self.assertIn('%s/test_model/%s/' % (settings.FACEBOOK_CANVAS_PAGE, self.test_model.id), content)

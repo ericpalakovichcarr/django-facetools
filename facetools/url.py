@@ -1,8 +1,8 @@
 from urlparse import urlparse
 
 from django.http import HttpResponse
-from django.shortcuts import redirect as django_redirect
-from django.core.urlresolvers import reverse as django_reverse
+from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
 from django.conf import settings
 
 def translate_url_to_facebook_url(url):
@@ -29,7 +29,7 @@ def translate_url_to_facebook_url(url):
     full_new_path = url[url.index(new_path):]
     return '%s%s' % (facebook_url, full_new_path)
 
-def reverse(*args, **kwargs):
+def facebook_reverse(*args, **kwargs):
     """
     Drop in replacement for Django's reverse function.  Modifies
     the url so it accounts for the facebook canvas url::
@@ -42,10 +42,10 @@ def reverse(*args, **kwargs):
     Refer to https://docs.djangoproject.com/en/1.3/topics/http/urls/#reverse
     for more information on the arguments ``facebook_reverse`` can take.
     """
-    url = django_reverse(*args, **kwargs)
+    url = reverse(*args, **kwargs)
     return translate_url_to_facebook_url(url)
 
-def redirect(to, skip_replace=False, *args, **kwargs):
+def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     """
     Drop in replacement for Django's redirect function.  Instead of returning a
     redirect using HTTP status codes and header values, it returns a regular HTML
@@ -78,7 +78,7 @@ def redirect(to, skip_replace=False, *args, **kwargs):
     </html>
     """
 
-    redirect_response = django_redirect(to, *args, **kwargs)
+    redirect_response = redirect(to, *args, **kwargs)
     url = redirect_response['Location']
     if not skip_replace:
         url = translate_url_to_facebook_url(url)

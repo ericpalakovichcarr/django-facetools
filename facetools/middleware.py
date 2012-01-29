@@ -1,7 +1,7 @@
 import urllib
 
 from django.http import HttpResponseRedirect
-from facetools.url import translate_url_to_facebook_url, redirect
+from facetools.url import translate_url_to_facebook_url, facebook_redirect
 
 GET_REDIRECT_PARAM = 'facebook_redirect'
 
@@ -10,7 +10,7 @@ class FacebookRedirectMiddleware():
         # Look for GET parameter, and redirect if you find it
         redirect_url = request.GET.get(GET_REDIRECT_PARAM)
         if redirect_url:
-            return redirect(redirect_url)
+            return facebook_redirect(redirect_url)
         return None
 
     def process_response(self, request, response):
