@@ -638,7 +638,7 @@ so it look like this::
             # The template should get all the polls in the database
             expected_polls = [p.pk for p in response.context['latest_poll_list']]
             actual_polls = [p.pk for p in Poll.objects.all()]
-            self.assertEquals(set(expected_polls), set(actual_polls))
+            self.assertEquals(set(expected_polls), se`t(actual_polls))
 
             # The response content should have our teset user's name
             assertIn(self.test_user.name, response.content)
@@ -672,4 +672,8 @@ Add the following code at the top of `mysite/polls/models.py`::
 
     # ... rest of file ...#
 
-The first signal
+With this, we'll have a Fandjango User record created for our test user before each test is ran,
+complete with the proper acesss token.  And we'll also have a signed request for the test user
+added to a cookie that Fandjango sets when a user logins on the real Facebook canvas site.
+
+Now go ahead and run the tests again.

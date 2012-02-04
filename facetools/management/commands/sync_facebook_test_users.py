@@ -11,6 +11,8 @@ from facetools.test.testusers import _create_test_user, _friend_test_users, _cre
 from facetools.signals import sync_facebook_test_user
 from facetools.models import TestUser
 
+facetools_fixture_name = "facetools_test_users.json"
+
 class Command(AppCommand):
     help = 'Creates the facebook test users defined in each app in the project.'
 
@@ -77,7 +79,7 @@ class Command(AppCommand):
             _friend_test_users(friendship[0], friendship[1])
 
         # Create the fixture for the test users
-        fixture_file_path = os.path.join(_get_app_fixture_directory(app), "facetools_test_users.json")
+        fixture_file_path = os.path.join(_get_app_fixture_directory(app), facetools_fixture_name)
         _print('Creating fixture for test users at %s' % fixture_file_path)
         old_stdout = sys.stdout
         sys.stdout = open(fixture_file_path,'w')

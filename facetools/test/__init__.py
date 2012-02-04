@@ -1,1 +1,2 @@
 from testcases import FacebookTestCase
+from common import TestUserNotLoaded

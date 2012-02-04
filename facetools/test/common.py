@@ -1,0 +1,1 @@
+class TestUserNotLoaded(Exception): pass
