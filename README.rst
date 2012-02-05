@@ -6,15 +6,17 @@ canvas apps in a Django project.
 
 Features:
 
-* Replacement ``url`` template tag as well as ``reverse`` and ``redirecct_to``
-  functions that convert an internal url into it's facebook canvas equivalent
+* Replacement ``url`` template tag as well as the ``reverse`` function that convert
+  an internal url into it's facebook canvas equivalent
   (ex: http://my_app.mycompany.com/canvas/my_view to https://apps.facebook.com/my_app/my_view)
 * Ability to define facebook test users, their permissions, and their initial
-  friends per app.  Management commands ``sync_facebook_test_users`` and
-  ``delete_facebook_test_users`` let you recreate your test users in your
-  facebook app with one call.
+  friends per app.  The management command ``sync_facebook_test_users`` lets you recreate
+  your test users in your facebook app with one call.
 * ``FacebookTestCase`` can be used in place of Django's ``TestCase``. Just
-  specify a test user, much like a fixture, and requests to the test client
-  will contain a valid signed_request for the test user.
+  specify a test user's name, much like a fixture, and the test client will mock
+  Facebook requests to your canvas app, complete with a valid signed request for the
+  specified test user.
+* Integration with other facebook django packages, supporting the following (with more to come):
+  * Fandjango (https://github.com/jgorset/fandjango)
 
-You can read more at
+You can read more at http://readthedocs.org/docs/django-facetools/en/latest/
