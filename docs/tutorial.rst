@@ -379,12 +379,11 @@ Using Facetools to fix iframe problems
 Ok, so now we have our Django app running as a Facebook canvas app.  But there are a few
 problems that persist.
 
-1. The links for each poll read like https://localhost:8443/canvas/polls/1
-instead of https://apps.facebook.com/facetools-example/polls/1.
+1. The links for each poll read like https://localhost:8443/canvas/polls/1 instead of https://apps.facebook.com/facetools-example/polls/1.
+
 2. When you click on a poll it goes to the page, but the browsers address bar doesn't update.
-3. When you vote in the poll you get an error.  If you check the choice you vote for
-you can see it's votes are going up with each vote.  This is because the vote gets through
-but the view is trying a redirect afterwards, which fails in an iframe.
+
+3. When you vote in the poll you get an error.  If you check the choice you vote for you can see it's votes are going up with each vote.  This is because the vote gets through but the view is trying a redirect afterwards, which fails in an iframe.
 
 We're going to solve all these problems using Facetools.  Do the following:
 
