@@ -92,7 +92,17 @@ to look like the following::
     )
 
 Now we can use the `reverse` function and `url` template tag to get a url without
-hardcoding paths.  We'll be using both later in this tutorial.
+hardcoding paths.  Let's update our templates now, replacing the lines with hardcocded
+urls with the following::
+
+    # In index.html
+    <a href="{% url poll_detail poll.id %}">{{ poll.question }}</a>
+
+    # In results.html
+    <a href="{% url poll_detail poll.id %}">Vote again?</a>
+
+    # In detail.html
+    <form action="{% url poll_vote poll_id=poll.id %}" method="post">
 
 Manually test the application
 -----------------------------
@@ -383,7 +393,7 @@ problems that persist.
 
 2. When you click on a poll it goes to the page, but the browsers address bar doesn't update.
 
-3. When you vote in the poll you get an error.  If you check the choice you vote for you can see it's votes are going up with each vote.  This is because the vote gets through but the view is trying a redirect afterwards, which fails in an iframe.
+3. When you vote in the poll you get an error, yet the admin shows the vote is getting counted.  This is because the vote gets handled in our `polls.views.vote` view, but then fails when the view tries to redirect in an iframe.
 
 We're going to solve all these problems using Facetools.  Do the following:
 
@@ -407,8 +417,6 @@ We're going to solve all these problems using Facetools.  Do the following:
 
     # In results.html
     <a href="{% facebook_url poll_detail poll.id %}" target="_top">Vote again?</a>
-
-    # We're not going to change detail.html for now...
 
 5. Change the `vote` view in `polls/views.py` so `redirect` is now
 `facebook_redirect`, and that is imported from `facetools.url`.
