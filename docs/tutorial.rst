@@ -25,8 +25,8 @@ Download the app and it's dependencies
 
 First things first. Clone this example app's starting point from github::
 
-    $ git clone git://github.com/bigsassy/facetools-example.git
-    $ cd facetools-example
+    $ git clone git://github.com/bigsassy/facetools-example-start.git
+    $ cd facetools-example-start
 
 **Optionally,** you can create a virtualenv for this app::
 
@@ -62,6 +62,38 @@ Let's create some test data.
 * Repeat, but set the question to *What's going down?*, with the choices *Not much*, and *My cholesterol*, once again with 0 votes each.
 * Click the *Save* button.
 
+Add names to our urls
+---------------------
+To keep things DRY, we're going to add names to all of our urls.  Change `polls/urls.py`
+to look like the following::
+
+    from django.conf.urls.defaults import patterns, include, url
+    from django.views.generic import DetailView, ListView
+    from polls.models import Poll
+
+    urlpatterns = patterns('',
+        url(r'^$',
+            ListView.as_view(
+                queryset=Poll.objects.order_by('-pub_date')[:5],
+                context_object_name='latest_poll_list',
+                template_name='polls/index.html'
+            ), name='poll_index'),
+        url(r'^(?P<pk>\d+)/$',
+            DetailView.as_view(
+                model=Poll,
+                template_name='polls/detail.html'
+            ), name='poll_detail'),
+        url(r'^(?P<pk>\d+)/results/$',
+            DetailView.as_view(
+                model=Poll,
+                template_name='polls/results.html'
+            ), name='poll_results'),
+        url(r'^(?P<poll_id>\d+)/vote/$', 'polls.views.vote', name="poll_vote"),
+    )
+
+Now we can use the `reverse` function and `url` template tag to get a url without
+hardcoding paths.  We'll be using both later in this tutorial.
+
 Manually test the application
 -----------------------------
 
@@ -92,15 +124,15 @@ and run the following::
 
     $ python manage.py dumpdata polls --indent=4 > polls/fixtures/polls.json
 
+Open the new file, `polls/fixtures/polls.json`, change the number of votes for poll choice
+"The sky" from 1 to 0, and save it.  Now we have a nice set of test data.
+
 Now open `polls/tests.py` and make make it look like this::
 
     from django.core.urlresolvers import reverse
     from django.test import TestCase
-    from django.test import LiveServerTestCase
 
     from polls.models import Poll
-
-    from selenium import webdriver
 
     class ServerSideTests(TestCase):
         fixtures = ['polls.json']
@@ -208,8 +240,8 @@ Convert the app into a Facebook canvas app
 Create the facebook app
 -----------------------
 
-Now with that the tutorial app less of a trivial example, let's transform
-this Django app into a Facebook app.  Let's get started.
+With that, it's time to start using Facebook.  So let's transform
+this Django app into a Facebook app.
 
 Before we do anything, you should familiarize yourself with Facebook
 canvas apps: http://developers.facebook.com/docs/guides/canvas/.
@@ -225,7 +257,7 @@ following values for your app settings:
 * Category: Leave it on Other
 
 In the *Select how your app integrates with Facebook* section, click the checkmark
-next to *App on Facebook*.  Next enter `https://localhost:8443` for the *Secure Canvas
+next to *App on Facebook*.  Next enter `https://localhost:8443/canvas/` for the *Secure Canvas
 URL* (you'll see why soon).  Facebook now requires all canvas apps to be served via SSL,
 so we're going to leave the *Canvas URL* setting blank.
 
@@ -236,7 +268,7 @@ Serve the facebook app from you development machine
 ---------------------------------------------------
 
 We told facebook to access our app via https://localhost:8443.  Since Facebook
-requires an SSL connection, we can't tell facebook to use our `manage.py runserver` instsance
+requires an SSL connection, we can't tell facebook to use our `manage.py runserver` instance
 at http://localhost:8000, since it's not secure.  We're going to get around this by
 using an application called Stunnel, which will let us setup an SSL connection locally.
 
@@ -244,7 +276,11 @@ First install stunnel:
 
 * If you're on Windows, just grab the installer.exe from ftp://ftp.stunnel.org/stunnel/.
 * Linux of OSX, download the tarball from ftp://ftp.stunnel.org/stunnel/.  Then unzip,
-  cd into the directory, and do the `sudo ./configure`. `sudo make`. `sudo make install` dance.
+  cd into the directory, and do::
+
+  $ sudo ./configure
+  $ sudo make
+  $ sudo make install
 
 Next, get back to the `mysite` directory on the command line and run the following::
 
@@ -306,8 +342,8 @@ Assuming you installed the requirments file, Fandjango should already available 
 
 Setting up Fandjango is easy.  In `settings.py`:
 
-# Add `fandjango` to your `INSTALLED_APPS`
-# Add `fandjango.middleware.FacebookMiddleware` to your `MIDDLEWARE_CLASSES`, before the CSRF middleware.
+* Add `fandjango` to your `INSTALLED_APPS`
+* Add `fandjango.middleware.FacebookMiddleware` to your `MIDDLEWARE_CLASSES`, before the CSRF middleware.
 `MIDDLEWARE_CLASSES` should end up looking like this::
 
     MIDDLEWARE_CLASSES = (
@@ -319,13 +355,13 @@ Setting up Fandjango is easy.  In `settings.py`:
         'django.contrib.messages.middleware.MessageMiddleware',
     )
 
-# Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
+* Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
 
     FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
     FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
     FACEBOOK_APPLICATION_NAMESPACE = "your-app-namespace"
 
-# Finally, run `syncdb` again to add the Fandjango tables::
+* Finally, run `syncdb` again to add the Fandjango tables::
 
     $ python manage.py syncdb
 

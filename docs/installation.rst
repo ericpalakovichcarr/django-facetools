@@ -25,13 +25,13 @@ For the latest stable version (recommended), use ``pip`` or ``easy_install``::
     $ pip install django-facetools
 
 **Alternatively**, you can also download the latest development version from
-http://github.com/philomat/django-facetools and run the installation script::
+http://github.com/bigsassy/django-facetools and run the installation script::
 
     $ python setup.py install
 
 **or** use ``pip``::
 
-    $ pip install -e git://github.com/philomat/django-facetools#egg=django-facetools
+    $ pip install -e git://github.com/bigsassy/django-facetools#egg=django-facetools
 
 
 Configure Django
