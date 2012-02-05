@@ -53,14 +53,14 @@ Add some data to the application
 --------------------------------
 Let's create some test data.
 
-* Go to http://localhost:8000/admin/
-* Click the *+Add* button for Polls
-* Set the question to *What's up?*
-* Click the *Show* link next to Date Information.  Click the *Today* and *Now* link for *Date published*.
-* Enter the choices *Not much*, and *The sky*.  Set each choice's *Votes* field to 0.
-* Click *Save and add another*
-* Repeat, but set the question to *What's going down?*, with the choices *Not much*, and *My cholesterol*, once again with 0 votes each.
-* Click the *Save* button.
+1. Go to http://localhost:8000/admin/
+2. Click the *+Add* button for Polls
+3. Set the question to *What's up?*
+4. Click the *Show* link next to Date Information.  Click the *Today* and *Now* link for *Date published*.
+5. Enter the choices *Not much*, and *The sky*.  Set each choice's *Votes* field to 0.
+6. Click *Save and add another*
+7. Repeat, but set the question to *What's going down?*, with the choices *Not much*, and *My cholesterol*, once again with 0 votes each.
+8. Click the *Save* button.
 
 Add names to our urls
 ---------------------
@@ -274,8 +274,8 @@ using an application called Stunnel, which will let us setup an SSL connection l
 
 First install stunnel:
 
-* If you're on Windows, just grab the installer.exe from ftp://ftp.stunnel.org/stunnel/.
-* Linux of OSX, download the tarball from ftp://ftp.stunnel.org/stunnel/.  Then unzip,
+1. If you're on Windows, just grab the installer.exe from ftp://ftp.stunnel.org/stunnel/.
+2. Linux of OSX, download the tarball from ftp://ftp.stunnel.org/stunnel/.  Then unzip,
   cd into the directory, and do::
 
   $ sudo ./configure
@@ -342,8 +342,8 @@ Assuming you installed the requirments file, Fandjango should already available 
 
 Setting up Fandjango is easy.  In `settings.py`:
 
-* Add `fandjango` to your `INSTALLED_APPS`
-* Add `fandjango.middleware.FacebookMiddleware` to your `MIDDLEWARE_CLASSES`, before the CSRF middleware.
+1. Add `fandjango` to your `INSTALLED_APPS`
+2. Add `fandjango.middleware.FacebookMiddleware` to your `MIDDLEWARE_CLASSES`, before the CSRF middleware.
 `MIDDLEWARE_CLASSES` should end up looking like this::
 
     MIDDLEWARE_CLASSES = (
@@ -355,18 +355,22 @@ Setting up Fandjango is easy.  In `settings.py`:
         'django.contrib.messages.middleware.MessageMiddleware',
     )
 
-* Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
+3. Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
 
     FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
     FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
     FACEBOOK_APPLICATION_NAMESPACE = "your-app-namespace"
 
-* Finally, run `syncdb` again to add the Fandjango tables::
+4. Finally, run `syncdb` again to add the Fandjango tables::
 
     $ python manage.py syncdb
 
-Now let's visit your page again.  You should see the poll page in all it's glory.
-Now visit https://localhost:8443/admin.  Your admin page is also available and
+Let's bring your server back up::
+
+    $ python manage.py runserver
+
+And let's visit your page again.  You should see the poll page in all it's glory.
+Now visit http://localhost:8000/admin.  Your admin page is also available and
 seperate from the facebook page.
 
 Using Facetools to fix iframe problems
@@ -384,8 +388,8 @@ but the view is trying a redirect afterwards, which fails in an iframe.
 
 We're going to solve all these problems using Facetools.  Do the following:
 
-# Add 'facetools' to your `INSTALLED_APPS` in the `settings.py` file.
-# Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
+1. Add 'facetools' to your `INSTALLED_APPS` in the `settings.py` file.
+2. Add the following settings at the bottom of the file.  You can find your values at https://developers.facebook.com/apps/::
 
     # existing settings you've already entered, and are required by facetools
     FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
@@ -395,9 +399,9 @@ We're going to solve all these problems using Facetools.  Do the following:
     FACEBOOK_CANVAS_PAGE = "Your canvas page here"
     FACEBOOK_CANVAS_URL = "The value from Secure Canvas URL here"
 
-# Add `{% load facetools_tags %}` to the top of all three template *.html files.
+3. Add `{% load facetools_tags %}` to the top of all three template *.html files.
 
-# Rename `url` to `facebook_url` Add a target of `_top` to each anchor tag in our templates::
+4. Rename `url` to `facebook_url` Add a target of `_top` to each anchor tag in our templates::
 
     # In index.html
     <a href="{% facebook_url poll_detail poll.id %}" target="_top">{{ poll.question }}</a>
@@ -407,7 +411,7 @@ We're going to solve all these problems using Facetools.  Do the following:
 
     # We're not going to change detail.html for now...
 
-# Change the `vote` view in `polls/views.py` so `redirect` is now
+5. Change the `vote` view in `polls/views.py` so `redirect` is now
 `facebook_redirect`, and that is imported from `facetools.url`.
 It should look like this::
 
