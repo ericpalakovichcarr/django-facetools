@@ -418,7 +418,7 @@ We're going to solve all these problems using Facetools.  Do the following:
     # In results.html
     <a href="{% facebook_url poll_detail poll.id %}" target="_top">Vote again?</a>
 
-5. Change the `vote` view in `polls/views.py` so `redirect` is now
+5. Change the `vote` view in `polls/views.py` so `HttpResponseRedirect` is now
 `facebook_redirect`, and that is imported from `facetools.url`.
 It should look like this::
 
@@ -440,16 +440,20 @@ It should look like this::
             selected_choice.save()
             return facebook_redirect(reverse('poll_results', args=(p.id,)))
 
-Save your changes and go to the index page again in your browser.  Now
-the url for each poll points to the the page in facebook.  And when you
-submit your vote in a poll, you'll get redirected back to the index page.
+Save your changes, do `runserver` again if it's not running, and go to the index page again
+in your browser.  Now the url for each poll points to the the page in facebook. And when you
+submit your vote in a poll, you'll get redirected to the results page.
+
+How did Facetools help?
+-----------------------
 
 The `facebook_url` tags automatically translate any url path that falls in
 the FACEBOOK_CANVAS_URL and translates it to it's facebook equivalent.
 
-The `facebook_redirect` function applies the same logic, and also substitues
-a `HttpResponseRedirect` with a regular html result.  The html consists of
-a redirect via javascript.  It'll look something like this::
+The `facebook_redirect` function applies the same logic, acting as a substitute for
+`HttpResponseRedirect` and `django.urlresolvers.reverse`.  It replaces the redirect resonse
+object with a regular html result.  The html consists of a redirect via javascript.  It'll
+look something like this::
 
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
             "http://www.w3.org/TR/html4/loose.dtd">
