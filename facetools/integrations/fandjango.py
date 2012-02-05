@@ -1,3 +1,5 @@
+import datetime
+
 def sync_facebook_test_user(sender, **kwargs):
     from django.utils import importlib
     models = importlib.import_module('fandjango.models')
@@ -22,7 +24,7 @@ def sync_facebook_test_user(sender, **kwargs):
         db_user.first_name = first_name
         db_user.middle_name = middle_name
         db_user.last_name = last_name
-        db_user.oauth_token = models.OAuthToken.create(token="", issued_at=0)
+        db_user.oauth_token = models.OAuthToken.objects.create(token="", issued_at=datetime.datetime.now())
     db_user.facebook_id = int(kwargs['test_user'].facebook_id)
     db_user.oauth_token.token = kwargs['test_user'].access_token
     db_user.save()

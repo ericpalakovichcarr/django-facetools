@@ -29,6 +29,9 @@ def _create_permissions_string(permission_list):
     """
     return ','.join(permission_list).replace(" ", "")
 
+def _get_facetools_test_fixture_name(app_name):
+    return "facetools_test_users_%s.json" % app_name
+
 # ---------------------------------------------------------------------
 # Following code originally by Reik Schatz. Taken from Fandjango. Thanks Reik!
 # http://javasplitter.blogspot.com/

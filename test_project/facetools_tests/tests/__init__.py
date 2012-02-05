@@ -1,4 +1,5 @@
 from test_common import CommonTests, SignedRequestTests
 from test_management_commands import SyncFacebookTestUsersTests
 from test_urls import UrlTests, FacebookUrlTests
-from test_middleware import *
+from test_middleware import FacebookRedirectMiddlewareTests
+from test_test_module import TestFacebookTestCase1, TestFacebookTestCase2, TestFacebookTestCase3, TestFandjangoIntegration, GetAppNameTestCase

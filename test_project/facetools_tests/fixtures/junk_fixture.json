@@ -1,0 +1,11 @@
+[
+    {
+        "pk": "Unittest Junk",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAJu23BQ3f9RePbdG785Adhxw8Hkabotkq9oJE2CWGptph5ZBdSra35VyKJiayZAgK5aamCoOYZBLNPxXgC2i4fLi8qL29LYWz5Y9vZB6",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003460044223&n=U0sM48CCJgb2urL",
+            "facebook_id": "100003460044223"
+        }
+    }
+]

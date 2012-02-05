@@ -1,4 +1,5 @@
 FACEBOOK_APPLICATION_ID = '301572769893123'
+FACEBOOK_APPLICATION_NAMESPACE = "django-facetools"
 FACEBOOK_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
 FACEBOOK_CANVAS_URL = "http://localhost:8000/canvas/"
 from FACEBOOK_APPLICATION_SECRET_KEY import *
@@ -25,6 +26,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'facetools',
+    'fandjango',
     'south',
     'django_extensions',
     'facetools_tests',
