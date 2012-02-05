@@ -615,6 +615,32 @@ and a test fixture with the TestUser data at
 created or re-created everytime the command is run, which is particularly
 useful for updating the fixture's access token when they go stale.
 
+**Extra** - We won't use this for the tutorial, but you can also define a test
+users friends among other test users.  It works like this::
+
+    facebook_test_users = [
+        {
+            'name': 'Sam Samson',
+            'installed': True,
+            'permissions': [
+                'read_stream',
+                'user_birthday',
+            ]
+        },
+        {
+            'name': 'Laura Ensminger',
+            'installed': True,
+            'permissions': [
+                'read_stream',
+                'user_birthday',
+            ],
+            'friends': ['Sam Samson']
+        }
+    ]
+
+If you ran `sync_facebook_test_users` now, you would get two test users that are
+friends with each other on Facebook.
+
 Update unit tests to test graph data
 ------------------------------------
 
@@ -676,4 +702,18 @@ With this, we'll have a Fandjango User record created for our test user before e
 complete with the proper acesss token.  And we'll also have a signed request for the test user
 added to a cookie that Fandjango sets when a user logins on the real Facebook canvas site.
 
-Now go ahead and run the tests again.
+Now if you go ahead and run the tests again everything should pass.
+
+Wrap Up
+=======
+
+And that's how you use Facetools and Fandjango together.  Here are the key takeaways:
+
+* Facetools will let you translate URLs for Facebook canvas pages with little effort
+* Facetools makes it easy to create and keep Facebook test users in sync across multiple
+  facebook apps (e.g. apps.facebook.com/myapp-dev, apps.facebook.com/myapp-staging)
+* Facetools give you a test client that mocks Facebook's communication with your canvas app.
+* Facetools provides a hook to sync your internal User models with your app's Facebook test users
+* Facetools also gives you a hook to view, modify, and use the signed request before each
+  of your tests.
+* And finally, Facetools comes with functions to hook into Fandjango.
