@@ -4,5 +4,7 @@ dist
 virenv
 .idea
 docs/_build
-facetools_test_users.json
+facetools_test_users_testapp1.json
+facetools_test_users_testapp2.json
+facetools_test_users_testapp3.json
 FACEBOOK_APPLICATION_SECRET_KEY*
