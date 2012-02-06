@@ -106,22 +106,22 @@ class UrlTests(TestCase):
 
     def test_full_url_redirect(self):
         response = facebook_redirect("http://www.google.com")
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 303)
         self.assertIn('http://www.google.com', response.content)
 
     def test_full_local_url_redirect(self):
         response = facebook_redirect('http://localhost:8000/canvas/test_url/')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 303)
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, response.content)
 
     def test_model_url_redirect(self):
         response = facebook_redirect(self.test_model)
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 303)
         self.assertIn('%s/test_model/%s/' % (settings.FACEBOOK_CANVAS_PAGE, self.test_model.id), response.content)
 
     def test_view_name_redirect(self):
         response = facebook_redirect('canvas:test_url')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 303)
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, response.content)
 
 class FacebookUrlTests(TestCase):

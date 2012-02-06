@@ -69,11 +69,13 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     <html>
     <head>
         <script type="text/javascript">
-            top.location.href="%s";
+            top.location.href="%(url)s";
         </script>
     </head>
     <body>
-
+        <noscript>
+            Redirecting to <a href="%(url)s" target="_top">%(url)s</a>.  Please <a href="%(url)s" target="_top">click here</a> if you aren't redirected.
+        </noscript>
     </body>
     </html>
     """
@@ -83,4 +85,4 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if not skip_replace:
         url = translate_url_to_facebook_url(url)
 
-    return HttpResponse(html_template % url)
+    return HttpResponse(html_template % url, status=303)

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect, HttpRequest
 
 from facetools.middleware import FacebookRedirectMiddleware, GET_REDIRECT_PARAM
+from fandjango.view import authorize_application
 
 class FacebookRedirectMiddlewareTests(TestCase):
 
@@ -64,3 +65,32 @@ class FacebookRedirectMiddlewareTests(TestCase):
                 mock_request.GET[GET_REDIRECT_PARAM] = query[GET_REDIRECT_PARAM][0]
                 response = middleware.process_request(mock_request)
                 self.assertIn('top.location.href="%s"' % query[GET_REDIRECT_PARAM][0], response.content)
+
+class FandjangoMiddlewareTests(TestCase):
+
+    def test_authorization_redirect_fix(self):
+        unaltered_redirect_uri = 'http://%(domain)s/%(namespace)s%(url)s' % {
+            'domain': settings.FACEBOOK_APPLICATION_DOMAIN,
+            'namespace': settings.FACEBOOK_APPLICATION_NAMESPACE,
+            'url': "/canvas/test_url/"
+        }
+        altered_redirect_uri = 'http://%(domain)s/%(namespace)s%(url)s' % {
+            'domain': settings.FACEBOOK_APPLICATION_DOMAIN,
+            'namespace': settings.FACEBOOK_APPLICATION_NAMESPACE,
+            'url': "/test_url/"
+        }
+
+
+        search_token = "window.parent.location ="
+        response = authorize_application(None, redirect_uri=unaltered_redirect_uri)
+        start = response.content.index(search_token) + len(search_token)
+        end = response.content.index(';', start)
+        unaltered_url = response.content[start:end]
+        self.assertEquals(unaltered_redirect_uri, unaltered_url)
+
+        middleware = FandjangoIntegrationMiddleware()
+        response = middleware.process_response(None, response)
+        start = response.content.index(search_token) + len(search_token)
+        end = response.content.index(';', start)
+        altered_url = response.content[start:end]
+        self.assertEquals(altered_redirect_uri, altered_url)
