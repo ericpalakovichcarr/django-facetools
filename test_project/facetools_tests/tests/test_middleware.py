@@ -4,8 +4,8 @@ from django.test import TestCase
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpRequest
 
-from facetools.middleware import FacebookRedirectMiddleware, GET_REDIRECT_PARAM
-from fandjango.view import authorize_application
+from facetools.middleware import FacebookRedirectMiddleware, FandjangoIntegrationMiddleware, GET_REDIRECT_PARAM
+from fandjango.views import authorize_application
 
 class FacebookRedirectMiddlewareTests(TestCase):
 
@@ -69,28 +69,27 @@ class FacebookRedirectMiddlewareTests(TestCase):
 class FandjangoMiddlewareTests(TestCase):
 
     def test_authorization_redirect_fix(self):
-        unaltered_redirect_uri = 'http://%(domain)s/%(namespace)s%(url)s' % {
-            'domain': settings.FACEBOOK_APPLICATION_DOMAIN,
-            'namespace': settings.FACEBOOK_APPLICATION_NAMESPACE,
-            'url': "/canvas/test_url/"
-        }
-        altered_redirect_uri = 'http://%(domain)s/%(namespace)s%(url)s' % {
-            'domain': settings.FACEBOOK_APPLICATION_DOMAIN,
-            'namespace': settings.FACEBOOK_APPLICATION_NAMESPACE,
-            'url': "/test_url/"
-        }
+        unaltered_redirect_uri = 'http://apps.facebook.com/django-facetools/canvas/test_url/'
+        altered_redirect_uri = 'https://apps.facebook.com/django-facetools/test_url/'
 
-
-        search_token = "window.parent.location ="
+        # Make sure our assumptions about the URL's location are correct
         response = authorize_application(None, redirect_uri=unaltered_redirect_uri)
-        start = response.content.index(search_token) + len(search_token)
-        end = response.content.index(';', start)
-        unaltered_url = response.content[start:end]
-        self.assertEquals(unaltered_redirect_uri, unaltered_url)
+        unaltered_js_url = self.get_redirect_uri(response, "window.parent.location =", ';')
+        unaltered_href_url = self.get_redirect_uri(response, 'You must <a href="', '"')
+        self.assertEquals(unaltered_redirect_uri, unaltered_js_url)
+        self.assertEquals(unaltered_redirect_uri, unaltered_href_url)
 
+        # Make sure the URL gets changed to the proper URL
         middleware = FandjangoIntegrationMiddleware()
         response = middleware.process_response(None, response)
-        start = response.content.index(search_token) + len(search_token)
-        end = response.content.index(';', start)
-        altered_url = response.content[start:end]
-        self.assertEquals(altered_redirect_uri, altered_url)
+        altered_js_url = self.get_redirect_uri(response, "window.parent.location =", ';')
+        altered_href_url = self.get_redirect_uri(response, 'You must <a href="', '"')
+        self.assertEquals(altered_redirect_uri, altered_js_url)
+        self.assertEquals(altered_redirect_uri, altered_href_url)
+
+    def get_redirect_uri(self, response, start_token, end_token):
+        start = response.content.index(start_token) + len(start_token)
+        end = response.content.index(end_token, start)
+        oauth_url = response.content[start:end]
+        query = urlparse.parse_qs(urlparse.urlparse(oauth_url).query)
+        return query['redirect_uri'][0]
