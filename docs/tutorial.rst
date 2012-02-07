@@ -568,12 +568,24 @@ will look for a signed request either in POST data or in the user's cookies.
 If it's missing, it'll redirect the user to an authorization page to install
 your app and grant it the permissions you specify.
 
+Finally, Facetools requires you add `facetools.middleware.FandjangoIntegrationMiddleware` to
+MIDDLEWARE_CLASSES, which should look this this when you're done::
+
+    MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'fandjango.middleware.FacebookMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'facetools.middleware.FandjangoIntegrationMiddleware',
+    )
+
 Adding Facebook open graph data to a template
 =============================================
 
 Change the
-template under `polls/templates/polls/index.html` so it looks
-like this::
+template under `polls/templates/polls/index.html` so it looks like this::
 
     {% load facetools_tags %}
 
