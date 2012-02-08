@@ -4,13 +4,20 @@ from distutils.core import setup
 
 import facetools
 
-long_description = open("README.rst").read()
+def get_long_description():
+    """
+    Return the contents of the README file.
+    """
+    try:
+        return open('README.rst').read()
+    except:
+        pass  # Required to install using pip (won't have README then)
 
 setup(
     name = 'django-facetools',
     version = facetools.__version__,
     description = "Django Facetools provides a set of features to ease development of Facecbook canvas apps in a Django project.",
-    long_description = long_description,
+    long_description = get_long_description(),
     author = "Eric Palakovich Carr",
     author_email = "carreric@gmail.com",
     license = "MIT",
@@ -24,7 +31,7 @@ setup(
         'facetools.templatetags',
         'facetools.test',
     ],
-    s = [
+    classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
