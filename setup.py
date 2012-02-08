@@ -23,5 +23,14 @@ setup(
         'facetools.migrations',
         'facetools.templatetags',
         'facetools.test',
+    ],
+    s = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Topic :: Software Development :: Testing',
     ]
 )
