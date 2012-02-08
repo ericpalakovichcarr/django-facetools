@@ -14,11 +14,11 @@ Features:
 - Ability to define facebook test users, their permissions, and their initial
   friends per app.  The management command ``sync_facebook_test_users`` lets you recreate
   your test users in your facebook app with one call.
+- Integration with other facebook django packages, supporting the following (with more to come):
+    - Fandjango (https://github.com/jgorset/fandjango)
 - ``FacebookTestCase`` can be used in place of Django's ``TestCase``. Just
   specify a test user's name, much like a fixture, and the test client will mock
   Facebook requests to your canvas app, complete with a valid signed request for the
   specified test user.
-- Integration with other facebook django packages, supporting the following (with more to come):
-    - Fandjango (https://github.com/jgorset/fandjango)
 
 You can read more at http://readthedocs.org/docs/django-facetools/en/latest/
