@@ -17,6 +17,6 @@ Features:
   Facebook requests to your canvas app, complete with a valid signed request for the
   specified test user.
 * Integration with other facebook django packages, supporting the following (with more to come):
-** Fandjango (https://github.com/jgorset/fandjango)
+    * Fandjango (https://github.com/jgorset/fandjango)
 
 You can read more at http://readthedocs.org/docs/django-facetools/en/latest/
