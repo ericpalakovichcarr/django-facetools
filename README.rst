@@ -4,6 +4,8 @@ Django Facetools Documentation
 Django Facetools provides a set of features to ease development of Facecbook
 canvas apps in a Django project.
 
+Integration with other facebook django packages, supporting the following (with more to come):
+
 Features:
 
 - Replacement ``url`` template tag as well as the ``reverse`` function that convert
