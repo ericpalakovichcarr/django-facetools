@@ -1,11 +1,15 @@
+import os
 import urlparse
+import re
 
 from django.test import TestCase
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpRequest
 
 from facetools.middleware import FacebookRedirectMiddleware, FandjangoIntegrationMiddleware, GET_REDIRECT_PARAM
+from test_project.canvas.views import test_url
 from fandjango.views import authorize_application
+import fandjango
 
 class FacebookRedirectMiddlewareTests(TestCase):
 
@@ -86,6 +90,19 @@ class FandjangoMiddlewareTests(TestCase):
         altered_href_url = self.get_redirect_uri(response, 'You must <a href="', '"')
         self.assertEquals(altered_redirect_uri, altered_js_url)
         self.assertEquals(altered_redirect_uri, altered_href_url)
+
+    def test_authorization_redirect_only_triggers_on_fandjango_authorization_redirect(self):
+        response = authorize_application(None, redirect_uri="http://apps.facebook.com/django-facetools/canvas/test_url/")
+        before_content = response.content
+        response = FandjangoIntegrationMiddleware().process_response(None, response)
+        after_content = response.content
+        self.assertNotEquals(before_content, after_content)
+
+        response = test_url(None)
+        before_content = response.content
+        response = FandjangoIntegrationMiddleware().process_response(None, response)
+        after_content = response.content
+        self.assertEquals(before_content, after_content)
 
     def get_redirect_uri(self, response, start_token, end_token):
         start = response.content.index(start_token) + len(start_token)

@@ -776,7 +776,8 @@ And that's how you use Facetools and Fandjango together.  Here are the key takea
 * Facetools makes it easy to create and keep Facebook test users in sync across multiple
   facebook apps (e.g. apps.facebook.com/myapp-dev, apps.facebook.com/myapp-staging)
 * Facetools give you a test client that mocks Facebook's communication with your canvas app.
-* Facetools provides a hook to sync your internal User models with your app's Facebook test users
-* Facetools also gives you a hook to view, modify, and use the signed request before each
+* Facetools provides a signal to sync your internal User models with your app's Facebook test users
+* Facetools also provides a signal to view, modify, and use the signed request before each
   of your tests.
-* And finally, Facetools comes with functions to hook into Fandjango.
+* And finally, Facetools comes with an integration package to work hand-in-hand
+with Fandjango.  Support for more Facebook packages coming soon.
