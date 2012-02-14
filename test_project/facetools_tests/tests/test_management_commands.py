@@ -6,12 +6,15 @@ import requests
 from django.test import TestCase
 from django.core import management
 from django.conf import settings
+from fandjango.models import User
 
 from facetools.management.commands.sync_facebook_test_users import _get_test_user_relationships
 from facetools.common import _get_app_access_token
 from facetools.test.testusers import _delete_test_user_on_facebook
 from facetools.models import TestUser
 from facetools.management.commands.sync_facebook_test_users import _get_app_fixture_directory, _get_facetools_test_fixture_name, _clean_test_user_fixture
+from facetools.signals import setup_facebook_test_client, sync_facebook_test_user
+from facetools.integrations import fandjango
 from test_project import testapp1, testapp2, testapp3
 
 class SyncFacebookTestUsersTests(TestCase):
@@ -61,7 +64,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for permission in test_users[0]['permissions']:
             self.assertTrue(permission.strip() in test_users[0]['graph_permission_data']['data'][0])
 
-        # Make sure the test user's information in Fandjango is correct
+        # Make sure the test user's information in facetools is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
@@ -91,7 +94,7 @@ class SyncFacebookTestUsersTests(TestCase):
         for permission in test_users[0]['permissions']:
             self.assertTrue(permission.strip() in test_users[0]['graph_permission_data']['data'][0])
 
-        # Make sure the test user's information in Fandjango is correct
+        # Make sure the test user's information in facetools is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
         self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
@@ -124,7 +127,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
-        # Make sure each test user's information in Fandjango is correct
+        # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
@@ -158,7 +161,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
-        # Make sure each test user's information in Fandjango is correct
+        # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
@@ -192,7 +195,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
-        # Make sure each test user's information in Fandjango is correct
+        # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
@@ -227,7 +230,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
-        # Make sure each test user's information in Fandjango is correct
+        # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
@@ -373,7 +376,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
-        # Make sure each test user's information in Fandjango is correct
+        # Make sure each test user's information in facetools is correct
         self.assertEquals(4, TestUser.objects.count())
         for user in TestUser.objects.all():
             test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
@@ -481,6 +484,39 @@ class FixTestUserFixtureTests(TestCase):
         new_content = _clean_test_user_fixture(fixture_content, test_users)
         self.assertEquals(expected_content, new_content)
 
+class FandjangoIntegrationTest(TestCase):
+
+    def _pre_setup(self):
+        sync_facebook_test_user.connect(fandjango.sync_facebook_test_user)
+        super(FandjangoIntegrationTest, self)._pre_setup()
+
+    def _post_teardown(self):
+        sync_facebook_test_user.disconnect(fandjango.sync_facebook_test_user)
+        super(FandjangoIntegrationTest, self)._post_teardown()
+
+    def tearDown(self):
+        for test_user in TestUser.objects.all():
+            test_user.delete() # should also delete facebook test user through delete method override
+
+    def test_fandjango_users_created_correctly(self):
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
+        self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
+        management.call_command('sync_facebook_test_users', 'testapp3')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure only the test users that have the app installed have correpsonding Fandjango User records
+        self.assertEquals(2, User.objects.count())
+        for test_user in test_users:
+            if test_user['installed']:
+                self.assertEquals(1, User.objects.filter(facebook_id=test_user['graph_user_data']['id']).count())
+                user = User.objects.get(facebook_id=test_user['graph_user_data']['id'])
+                self.assertEquals(test_user['access_token'], user.oauth_token.token)
+            else:
+                self.assertEquals(0, User.objects.filter(facebook_id=test_user['graph_user_data']['id']).count())
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """
@@ -499,6 +535,7 @@ def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_toke
 
             for facebook_test_user in facebook_test_users:
                 if user_data and 'name' in user_data and facebook_test_user['name'] == user_data['name']:
+                    facebook_test_user['access_token'] = graph_test_user.get('access_token')
                     facebook_test_user['graph_user_data'] = user_data
                     facebook_test_user['graph_user_data']['login_url'] = graph_test_user['login_url']
                     facebook_test_user['graph_permission_data'] = permissions_data if 'data' in permissions_data else None
