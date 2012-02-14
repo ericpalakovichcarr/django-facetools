@@ -1,3 +1,4 @@
+import os
 from facetools import json
 import copy
 
@@ -10,6 +11,8 @@ from facetools.management.commands.sync_facebook_test_users import _get_test_use
 from facetools.common import _get_app_access_token
 from facetools.test.testusers import _delete_test_user_on_facebook
 from facetools.models import TestUser
+from facetools.management.commands.sync_facebook_test_users import _get_app_fixture_directory, _get_facetools_test_fixture_name, _clean_test_user_fixture
+from test_project import testapp1, testapp2, testapp3
 
 class SyncFacebookTestUsersTests(TestCase):
 
@@ -66,6 +69,9 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp1, 'testapp1', facebook_test_users)
+
     def test_overwrite_one_user(self):
         from test_project.testapp1.facebook_test_users import facebook_test_users
         self.assertEquals(0, TestUser.objects.count())
@@ -93,9 +99,12 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp1, 'testapp1', facebook_test_users)
+
     def test_creating_many_users(self):
-        from test_project.testapp2.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp2.facebook_test_users import facebook_test_users as t2
+        facebook_test_users = t2()
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp2')
 
@@ -122,10 +131,13 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp2, 'testapp2', t2())
 
     def test_overwriting_many_users(self):
-        from test_project.testapp2.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp2.facebook_test_users import facebook_test_users as t2
+        facebook_test_users = t2()
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp2')
         management.call_command('sync_facebook_test_users', 'testapp2')
@@ -154,9 +166,12 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp2, 'testapp2', t2())
+
     def test_creating_many_users_mixed_installations(self):
-        from test_project.testapp3.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
         self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp3')
@@ -185,9 +200,12 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
     def test_overwriting_many_users_mixed_installations(self):
-        from test_project.testapp3.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
         self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp3')
@@ -217,9 +235,12 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
     def test_sync_where_in_facetools_missing_in_facebook(self):
-        from test_project.testapp3.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
         self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp3')
@@ -248,9 +269,12 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(3, len(test_users))
         self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
     def test_sync_where_in_facebook_missing_in_facetools(self):
-        from test_project.testapp3.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
         self.assertTrue(not all([u['installed'] for u in facebook_test_users])) # make sure all the users aren't set to have the app installed
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp3')
@@ -265,8 +289,7 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
 
         # Now remove the users from facetools, leaving them on facebook
-        for test_user in test_users:
-            TestUser.objects.all().delete()
+        TestUser.objects.all().delete()
         self.assertEquals(0, TestUser.objects.count())
         check_users = json.loads(requests.get(test_users_url).content)['data']
         old_ids = [u['graph_user_data']['id'] for u in test_users]
@@ -279,9 +302,12 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(3, len(test_users))
         self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
 
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
     def test_sync_where_in_facebook_and_in_facetools_but_data_not_synced(self):
-        from test_project.testapp3.facebook_test_users import facebook_test_users
-        facebook_test_users = facebook_test_users()
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t3()
         self.assertEquals(0, TestUser.objects.count())
         management.call_command('sync_facebook_test_users', 'testapp3')
 
@@ -320,6 +346,141 @@ class SyncFacebookTestUsersTests(TestCase):
                 test_user.facebook_id = old_values[test_user.name]['facebook_id']
                 test_user.access_token= old_values[test_user.name]['access_token']
                 test_user.save()
+
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
+    def test_sync_multiple_apps(self):
+        from test_project.testapp1.facebook_test_users import facebook_test_users as t1
+        from test_project.testapp2.facebook_test_users import facebook_test_users as t2
+        facebook_test_users = t1 + t2()
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users', 'testapp1', 'testapp2')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure each test user's information on facebook is correct
+        self.assertEquals(4, len(test_users))
+        self.assertEquals(4, len([u for u in test_users if 'graph_user_data' in u and 'graph_permission_data' in u]))
+        for test_user in test_users:
+            for permission in test_user['permissions']:
+                self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
+            friends_on_facebook = _get_friends_on_facebook(test_user)
+            for friend_name in test_user.get('friends', []):
+                self.assertTrue(friend_name in friends_on_facebook)
+                self.assertEqual(friends_on_facebook[friend_name],
+                                 TestUser.objects.get(name=friend_name).facebook_id)
+
+        # Make sure each test user's information in Fandjango is correct
+        self.assertEquals(4, TestUser.objects.count())
+        for user in TestUser.objects.all():
+            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp1, 'testapp1', t1)
+        self.assertTestUserFixture(testapp2, 'testapp2', t2())
+
+    def assertTestUserFixture(self, app, app_name, test_users):
+        fixture_file_path = os.path.join(_get_app_fixture_directory(app),
+                                         _get_facetools_test_fixture_name(app_name))
+        fixture_test_users = json.loads(open(fixture_file_path).read())
+        fixture_user_names = set([u['pk'] for u in fixture_test_users])
+        expected_user_names = set([u['name'] for u in test_users])
+        self.assertEquals(expected_user_names, fixture_user_names)
+
+class FixTestUserFixtureTests(TestCase):
+
+    def test_clean_test_user_fixture_1(self):
+        fixture_content = """[
+    {
+        "pk": "Unittest Smith",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAAZBgFVWohGpg0XtALkfga09fF4mZBwhtF2q0ORpYJ7tJdZBEj5cWw8wQzbMcZBZBFZAZBVuFnAIV7JxBaZAUAOOBa5a7e4Qrav5ZCndFWDmA",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003568662664&n=rx3Yb9ihtNlVHfT",
+            "facebook_id": "100003568662664"
+        }
+    },
+    {
+        "pk": "Unittest Jacobs",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAGQu1lzfZABZCCMq81JFPx4PP2KzR1IsLO7nZBTZCGU1szsdH2nn4aNmZB5FcvJcEDyv8Et9P8TDurZA2K522oJcYFEtETIAq6NrmKLbZBR",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003573522566&n=PB5kX2MF0VUJ2mn",
+            "facebook_id": "100003573522566"
+        }
+    }
+]"""
+        expected_content = """[
+    {
+        "pk": "Unittest Jacobs",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAGQu1lzfZABZCCMq81JFPx4PP2KzR1IsLO7nZBTZCGU1szsdH2nn4aNmZB5FcvJcEDyv8Et9P8TDurZA2K522oJcYFEtETIAq6NrmKLbZBR",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003573522566&n=PB5kX2MF0VUJ2mn",
+            "facebook_id": "100003573522566"
+        }
+    }
+]"""
+        test_users = [
+            {
+                'name': 'Unittest Jacobs',
+                'installed': True,
+                'permissions': []
+            }
+        ]
+
+        new_content = _clean_test_user_fixture(fixture_content, test_users)
+        self.assertEquals(expected_content, new_content)
+
+    def test_clean_test_user_fixture_2(self):
+        fixture_content = """[
+    {
+        "pk": "Unittest Smith",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAAZBgFVWohGpg0XtALkfga09fF4mZBwhtF2q0ORpYJ7tJdZBEj5cWw8wQzbMcZBZBFZAZBVuFnAIV7JxBaZAUAOOBa5a7e4Qrav5ZCndFWDmA",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003568662664&n=rx3Yb9ihtNlVHfT",
+            "facebook_id": "100003568662664"
+        }
+    },
+    {
+        "pk": "Unittest Jacobs",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAGQu1lzfZABZCCMq81JFPx4PP2KzR1IsLO7nZBTZCGU1szsdH2nn4aNmZB5FcvJcEDyv8Et9P8TDurZA2K522oJcYFEtETIAq6NrmKLbZBR",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003573522566&n=PB5kX2MF0VUJ2mn",
+            "facebook_id": "100003573522566"
+        }
+    }
+]"""
+        expected_content = """[
+    {
+        "pk": "Unittest Smith",
+        "model": "facetools.testuser",
+        "fields": {
+            "access_token": "AAAESR2HSywMBAAZBgFVWohGpg0XtALkfga09fF4mZBwhtF2q0ORpYJ7tJdZBEj5cWw8wQzbMcZBZBFZAZBVuFnAIV7JxBaZAUAOOBa5a7e4Qrav5ZCndFWDmA",
+            "login_url": "https://www.facebook.com/platform/test_account_login.php?user_id=100003568662664&n=rx3Yb9ihtNlVHfT",
+            "facebook_id": "100003568662664"
+        }
+    }
+]"""
+        test_users = [
+            {
+                'name': 'Unittest Smith',
+                'installed': True,
+                'permissions': []
+            }
+        ]
+
+        new_content = _clean_test_user_fixture(fixture_content, test_users)
+        self.assertEquals(expected_content, new_content)
+
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """

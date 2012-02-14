@@ -1,6 +1,7 @@
 import urllib
-from facetools import json
+import time
 
+from facetools import json
 from django.conf import settings
 from facetools.common import _get_app_access_token, _create_permissions_string
 from facetools.models import TestUser
@@ -49,26 +50,22 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
         test_user_url = '%s&name=%s' % (test_user_url,urllib.quote(name))
 
     # Request a new test user from facebook
-    r = requests.get(test_user_url)
-    if r.status_code == 200:
-        data = json.loads(r.content)
-        if 'error' in data:
+    for attempts in range(3, 0, -1):
+        r = requests.get(test_user_url)
+        try: data = json.loads(r.content)
+        except: data = None
+        if r.status_code != 200 or data is None or data == False or 'error' in data:
+            if attempts > 0:
+                continue
             try:
                 raise CreateTestUserError(data['error']['message'])
             except:
-                raise CreateTestUserError("Request to create test user failed (call to facebook api failed)")
-        elif data == 'false':
-            raise CreateTestUserError("Request to create test user failed (call to facebook api returned false)")
-
-        # Successfull call
-        else:
-            return data
-    else:
-        try:
-            data = json.loads(r.content)
-            raise CreateTestUserError(data['error']['message'])
-        except:
-            raise CreateTestUserError("Request to create test user failed (status code %s)" % r.status_code)
+                try:
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                except:
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
+        return data
+    raise CreateTestUserError("Request to create test user failed")
 
 def _create_test_user_in_facetools(name, facebook_data):
     # Add the user to the test user table
@@ -96,11 +93,16 @@ def _delete_test_user_on_facebook(test_user):
     delete_url_template = "https://graph.facebook.com/%s?method=delete&access_token=%s"
     delete_user_url = delete_url_template % (test_user.facebook_id, _get_app_access_token())
     r = requests.delete(delete_user_url)
+    if not isinstance(r.content, basestring):
+        raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned invalid response" % (test_user.name, test_user.facebook_id, r.content))
     if r.content.strip().lower() != "true":
-        try:
-            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(r.content)['error']['message']))
-        except:
-            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, r.content))
+        if r.content.strip().lower() == "false":
+            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned false" % (test_user.name, test_user.facebook_id, r.content))
+        else:
+            try:
+                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(r.content)['error']['message']))
+            except:
+                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, r.content))
 
 # -------------------------------------------------------------------------------------
 # Functions for creating friends between test users

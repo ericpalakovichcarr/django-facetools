@@ -12,7 +12,13 @@ class TestUser(models.Model):
     def delete(self, *args, **kwargs):
         from facetools.test.testusers import _delete_test_user_on_facebook # avoiding circular dependency
         if self.facebook_id:
-            _delete_test_user_on_facebook(self)
+            for attempts in range(3, 0, -1):
+                try:
+                    _delete_test_user_on_facebook(self)
+                    break
+                except:
+                    if attempts <= 0:
+                        raise
         super(TestUser, self).delete(*args, **kwargs)
 
     def __unicode__(self):
