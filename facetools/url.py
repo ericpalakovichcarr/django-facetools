@@ -14,19 +14,30 @@ def translate_url_to_facebook_url(url):
     ex: http://localhost:8000/canvas/page/ becomes https://apps.facebook.com/my_facebook_app/page/
     """
     url_parts = urlparse(url)
-    canvas_parts = urlparse(settings.FACEBOOK_CANVAS_URL)
+    canvas_url = settings.FACEBOOK_CANVAS_URL
+    if canvas_url.endswith('/'): canvas_url = canvas_url[:-1]
+    canvas_parts = urlparse(canvas_url)
 
     # Dont convert the url if its not a canvas url
-    if url_parts.scheme and not settings.FACEBOOK_CANVAS_URL.startswith('%s://%s' % (url_parts.scheme, url_parts.netloc)):
+    if url_parts.scheme and not canvas_url.startswith('%s://%s' % (url_parts.scheme, url_parts.netloc)):
         return url
+    if url_parts.netloc and not (canvas_url.startswith('http://%s' % url_parts.netloc) or canvas_url.startswith('https://%s' % url_parts.netloc)):
+        return url
+    if url_parts.path and not url_parts.path.startswith('/'):
+        net_loc = url_parts.path
+        if '/' in net_loc: net_loc = net_loc[:net_loc.index('/')]
+        if not (canvas_url.startswith('http://%s' % net_loc) or canvas_url.startswith('https://%s' % net_loc)):
+            return url
     if not url_parts.path.startswith(canvas_parts.path):
         return url
 
     facebook_url = settings.FACEBOOK_CANVAS_PAGE
     if facebook_url.endswith('/'): facebook_url = facebook_url[:-1]
-    new_path = url_parts.path.replace(canvas_parts.path, '')
-    if not new_path.startswith('/'): new_path = '/%s' % new_path
-    full_new_path = url[url.index(new_path):]
+    start = len(url_parts.scheme) + len(url_parts.netloc)
+    if url_parts.scheme.strip():
+        start += len("://")
+    start = url.index(canvas_parts.path, start) + len(canvas_parts.path)
+    full_new_path = url[start:]
     return '%s%s' % (facebook_url, full_new_path)
 
 def facebook_reverse(*args, **kwargs):
