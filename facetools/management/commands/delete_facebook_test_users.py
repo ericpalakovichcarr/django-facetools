@@ -3,7 +3,7 @@ import sys
 from facetools import json
 
 from django.core import management
-from django.core.management.base import BaseCommand, AppCommand, ImproperlyConfigured, CommandError
+from django.core.management.base import AppCommand, BaseCommand
 from django.conf import settings
 import requests
 
@@ -13,35 +13,13 @@ from facetools.models import TestUser
 from facetools.common import _get_facetools_test_fixture_name
 
 
-class Command(BaseCommand):
-    help = 'Creates the facebook test users defined for all apps in the project.'
-
-    def handle(self, *app_labels, **options):
-        from django.db import models
-        if not app_labels:
-            app_labels = settings.INSTALLED_APPS # do all the apps if no apps are specified
-        app_list = []
-        for app_label in app_labels:
-            try:
-                app_list.append(models.get_app(app_label))
-            except (ImproperlyConfigured, ImportError), e:
-                pass
-        output = []
-        for app in app_list:
-            app_output = self.handle_app(app, **options)
-            if app_output:
-                output.append(app_output)
-        return '\n'.join(output)
+class Command(AppCommand):
+    help = 'Creates the facebook test users defined in each app in the project.'
 
     def handle_app(self, app, **options):
         app_name = '.'.join(app.__name__.split('.')[0:-1])
 
-        # Get the app's test users from it's facebook_test_users.py file, skipping the app if it
-        # doesn't have one
         test_users = _get_facetools_test_users(app_name)
-        if test_users == False:
-            return
-
         existing_facebook_test_users = _get_existing_facebook_test_users()
         existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
         existing_test_users = set(existing_facebook_test_users.keys() + existing_facetool_test_users)
@@ -105,11 +83,7 @@ def _get_facetools_test_users(app_name, test_user_module_name='facebook_test_use
         if callable(facetools_test_users):
             facetools_test_users = facetools_test_users()
     except ImportError:
-        return False
-    except AttributeError, err:
-        if "object has no attribute 'facebook_test_users'" not in str(err):
-            raise
-        return False
+        raise Exception("Error: %s doesn't have a module called %s" % (app_name, test_user_module_name))
 
     # Ensure no test users share the same name
     facetools_test_names = set([u['name'] for u in facetools_test_users])

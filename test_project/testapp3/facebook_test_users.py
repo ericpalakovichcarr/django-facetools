@@ -1,21 +1,21 @@
 def facebook_test_users():
     return [
         {
-            'name': 'Unittest Jacobs',
+            'name': 'Unittest More',
             'installed': False,
             'permissions': [],
             'friends': []
         },
         {
-            'name': 'Unittest Deschain',
+            'name': 'Unittest Vanilla',
             'installed': True,
             'permissions': [],
-            'friends': ['Unittest Billows']
+            'friends': ['Unittest Waffers']
         },
         {
-            'name': 'Unittest Billows',
+            'name': 'Unittest Waffers',
             'installed': True,
             'permissions': [],
-            'friends': ['Unittest Deschain']
+            'friends': ['Unittest Vanilla']
         },
     ]

@@ -388,6 +388,43 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertTestUserFixture(testapp1, 'testapp1', t1)
         self.assertTestUserFixture(testapp2, 'testapp2', t2())
 
+    def test_sync_all_apps(self):
+        from test_project.testapp1.facebook_test_users import facebook_test_users as t1
+        from test_project.testapp2.facebook_test_users import facebook_test_users as t2
+        from test_project.testapp3.facebook_test_users import facebook_test_users as t3
+        facebook_test_users = t1 + t2() + t3()
+        self.assertEquals(0, TestUser.objects.count())
+        management.call_command('sync_facebook_test_users')
+
+        # Get the test user data from facebook
+        test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (settings.FACEBOOK_APPLICATION_ID, _get_app_access_token())
+        test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
+
+        # Make sure each test user's information on facebook is correct
+        self.assertEquals(7, len(test_users))
+        self.assertEquals(7, len([u for u in test_users if 'graph_user_data' in u and 'graph_permission_data' in u]))
+        for test_user in test_users:
+            for permission in test_user['permissions']:
+                self.assertTrue(permission.strip() in test_user['graph_permission_data']['data'][0])
+            friends_on_facebook = _get_friends_on_facebook(test_user)
+            for friend_name in test_user.get('friends', []):
+                self.assertTrue(friend_name in friends_on_facebook)
+                self.assertEqual(friends_on_facebook[friend_name],
+                                 TestUser.objects.get(name=friend_name).facebook_id)
+
+        # Make sure each test user's information in facetools is correct
+        self.assertEquals(7, TestUser.objects.count())
+        for user in TestUser.objects.all():
+            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
+            self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+
+        # Make sure the generated fixture is correct
+        self.assertTestUserFixture(testapp1, 'testapp1', t1)
+        self.assertTestUserFixture(testapp2, 'testapp2', t2())
+        self.assertTestUserFixture(testapp3, 'testapp3', t3())
+
     def assertTestUserFixture(self, app, app_name, test_users):
         fixture_file_path = os.path.join(_get_app_fixture_directory(app),
                                          _get_facetools_test_fixture_name(app_name))
