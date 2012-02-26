@@ -267,41 +267,16 @@ following values for your app settings:
 * Category: Leave it on Other
 
 In the *Select how your app integrates with Facebook* section, click the checkmark
-next to *App on Facebook*.  Next enter `https://localhost:8443/canvas/` for the *Secure Canvas
-URL* (you'll see why soon).  Facebook now requires all canvas apps to be served via SSL,
-so we're going to leave the *Canvas URL* setting blank.
+next to *App on Facebook*.  Next enter `https://localhost:8000/canvas/` for the *Canvas
+URL*.  Leave the secure canvas canvas url blank, as we'll be running this site as a development
+site.
 
-Finally click the *Save changes* button to create your app!
+Next, click the *Save changes* button to create your app!  You'll get a warning saying
+Secure Canvas URL will be required.  To fix this requirement, we're going to turn on sandbox mode.
+Sandbox mode makes the application invisible to facebook users not explicitly added to the app.
 
-
-Serve the facebook app from you development machine
----------------------------------------------------
-
-We told facebook to access our app via https://localhost:8443.  Since Facebook
-requires an SSL connection, we can't tell facebook to use our `manage.py runserver` instance
-at http://localhost:8000, since it's not secure.  We're going to get around this by
-using an application called Stunnel, which will let us setup an SSL connection locally.
-
-First install stunnel:
-
-1. If you're on Windows, just grab the installer.exe from ftp://ftp.stunnel.org/stunnel/.
-2. Linux of OSX, download the tarball from ftp://ftp.stunnel.org/stunnel/.  Then unzip,
-  cd into the directory, and do::
-
-  $ sudo ./configure
-  $ sudo make
-  $ sudo make install
-
-Next, get back to the `mysite` directory on the command line and run the following::
-
-    $ cd ../stunnel_cfg
-    $ stunnel dev_https
-    $ cd ../mysite
-    $ python manage.py runserver
-
-If you open your browser to https://localhost:8443/polls/ you should get a warning
-that the certificate is not secure.  Accept the certificate and you should see the
-polls page.
+To setup sandbox mode, click on *Advanced* under *Settings* in the left navigation, click the
+*Enabled* radio for *Sandbox Mode*, and click the *Save changes* button at the bottom of the page.
 
 Seperate your canvas app from the admin
 ---------------------------------------
@@ -309,7 +284,7 @@ Seperate your canvas app from the admin
 Next, we want to make sure the admin section of our site isn't availalble
 from the facebook app.  We're going to modify the root `urls.py` in the `mysite`
 directory so the polls app is reached from /canvas/
-(e.g. https:localhost:8443/canvas/polls/poll/1/)/  We're going to change
+(e.g. http:localhost:8000/canvas/polls/poll/1/)/  We're going to change
 one line from this::
 
     url(r'^polls/', include('polls.urls')),
@@ -389,7 +364,7 @@ Using Facetools to fix iframe problems
 Ok, so now we have our Django app running as a Facebook canvas app.  But there are a few
 problems that persist.
 
-1. The links for each poll read like https://localhost:8443/canvas/polls/1 instead of https://apps.facebook.com/facetools-example/polls/1.
+1. The links for each poll read like http://localhost:8000/canvas/polls/1 instead of https://apps.facebook.com/facetools-example/polls/1.
 
 2. When you click on a poll it goes to the page, but the browsers address bar doesn't update.
 
