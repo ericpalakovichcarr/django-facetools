@@ -44,7 +44,7 @@ class FacebookTestCase(TestCase):
                 setup_facebook_test_client.send(sender=None, client=self.client, signed_request=_create_signed_request(
                     settings.FACEBOOK_APPLICATION_SECRET_KEY,
                     self.test_user.facebook_id,
-                    oauth_token=self.test_user.access_token
+                    oauth_token=self.test_user.access_token,
                 ))
             except TestUser.DoesNotExist:
                 raise TestUserNotLoaded("Test user %s hasn't been loaded via the %s fixture (did you run sync_facebook_test_users?)" %

@@ -96,4 +96,4 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if not skip_replace:
         url = translate_url_to_facebook_url(url)
 
-    return HttpResponse(html_template % {'url':url}, status=303)
+    return HttpResponse(html_template % {'url':url})
