@@ -53,6 +53,7 @@ class FandjangoIntegrationMiddleware(object):
             end = oauth_url.index("&", start)
             new_oauth_url = oauth_url.replace(oauth_url[start:end], urllib.quote_plus(new_url))
             response.content = response.content.replace(oauth_url, new_oauth_url)
+            response.status_code = 200
 
         return response
 
