@@ -8,12 +8,9 @@ from facetools.test import TestUserNotLoaded
 from facetools.signals import sync_facebook_test_user, setup_facebook_test_client
 from facetools.common import _get_facetools_test_fixture_name
 
-# TODO: Add class that subclasses TransactionTestCase as well
-
-class FacebookTestCase(TestCase):
+class FacebookTestCaseMixin(object):
     """
-    TestCase which makes it possible to test views when the FacebookMiddleware
-    and SyncFacebookUser middlewares are activated.  Must use the Client
+    Mixin for django test case classes. Adds a method to .  Must use the Client
     attached to this object (i.e. self.client).
     """
     facebook_test_user = None
@@ -30,7 +27,7 @@ class FacebookTestCase(TestCase):
                 self.fixtures = []
             if facetools_fixture_name not in self.fixtures:
                 self.fixtures.append(facetools_fixture_name)
-            super(FacebookTestCase, self)._pre_setup()
+            super(FacebookTestCaseMixin, self)._pre_setup()
 
             # Make sure anybody that needs to sync their models loaded from fixtures
             # has a chance to do so now that the refreshed user test data is available.
@@ -50,7 +47,7 @@ class FacebookTestCase(TestCase):
                 raise TestUserNotLoaded("Test user %s hasn't been loaded via the %s fixture (did you run sync_facebook_test_users?)" %
                                         (self.facebook_test_user, facetools_fixture_name))
         else:
-            super(FacebookTestCase, self)._pre_setup()
+            super(FacebookTestCaseMixin, self)._pre_setup()
 
 def get_app_name_from_test_case(module_path_string):
     """
