@@ -90,6 +90,7 @@ class FandjangoMiddlewareTests(TestCase):
         altered_href_url = self.get_redirect_uri(response, 'You must <a href="', '"')
         self.assertEquals(altered_redirect_uri, altered_js_url)
         self.assertEquals(altered_redirect_uri, altered_href_url)
+        self.assertEquals(200, response.status_code)
 
     def test_authorization_redirect_only_triggers_on_fandjango_authorization_redirect(self):
         response = authorize_application(None, redirect_uri="http://apps.facebook.com/django-facetools/canvas/test_url/")

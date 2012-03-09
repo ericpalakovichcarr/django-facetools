@@ -67,7 +67,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure the test user's information in facetools is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
-        self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
+        self.assertEquals(int(test_users[0]['graph_user_data']['id']), user.facebook_id)
         self.assertEquals(test_users[0]['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
@@ -97,7 +97,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure the test user's information in facetools is correct
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
-        self.assertEquals(test_users[0]['graph_user_data']['id'], user.facebook_id)
+        self.assertEquals(int(test_users[0]['graph_user_data']['id']), user.facebook_id)
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
@@ -130,7 +130,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
-            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
@@ -198,7 +198,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
-            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
@@ -296,7 +296,7 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(0, TestUser.objects.count())
         check_users = json.loads(requests.get(test_users_url).content)['data']
         old_ids = [u['graph_user_data']['id'] for u in test_users]
-        self.assertTrue(all([c['id'] in old_ids for c in check_users]))
+        self.assertEquals(3, len([c for c in check_users if c['id'] in old_ids]))
 
         # After syncing again the data should be back to normal
         management.call_command('sync_facebook_test_users', 'testapp3')
@@ -331,7 +331,7 @@ class SyncFacebookTestUsersTests(TestCase):
                     'facebook_id': test_user.facebook_id,
                     'access_token': test_user.access_token
                 }
-                test_user.facebook_id = "failbear"
+                test_user.facebook_id = 0
                 test_user.access_token = "failbear"
                 test_user.save()
 
@@ -342,12 +342,12 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(3, len(test_users))
             self.assertEquals(3, len([u for u in test_users if 'graph_user_data' in u]))
             for test_user in TestUser.objects.all():
-                self.assertNotEquals("failbear", test_user.facebook_id)
+                self.assertNotEquals(0, test_user.facebook_id)
                 self.assertNotEquals("failbear", test_user.access_token)
         finally:
             for test_user in TestUser.objects.all():
                 test_user.facebook_id = old_values[test_user.name]['facebook_id']
-                test_user.access_token= old_values[test_user.name]['access_token']
+                test_user.access_token = old_values[test_user.name]['access_token']
                 test_user.save()
 
         # Make sure the generated fixture is correct
@@ -379,7 +379,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure each test user's information in facetools is correct
         self.assertEquals(4, TestUser.objects.count())
         for user in TestUser.objects.all():
-            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
@@ -415,7 +415,7 @@ class SyncFacebookTestUsersTests(TestCase):
         # Make sure each test user's information in facetools is correct
         self.assertEquals(7, TestUser.objects.count())
         for user in TestUser.objects.all():
-            test_user = [t for t in test_users if t['graph_user_data']['id'] == user.facebook_id][0]
+            test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
@@ -549,11 +549,10 @@ class FandjangoIntegrationTest(TestCase):
         self.assertEquals(2, User.objects.count())
         for test_user in test_users:
             if test_user['installed']:
-                self.assertEquals(1, User.objects.filter(facebook_id=test_user['graph_user_data']['id']).count())
-                user = User.objects.get(facebook_id=test_user['graph_user_data']['id'])
+                user = User.objects.get(facebook_id=int(test_user['graph_user_data']['id']))
                 self.assertEquals(test_user['access_token'], user.oauth_token.token)
             else:
-                self.assertEquals(0, User.objects.filter(facebook_id=test_user['graph_user_data']['id']).count())
+                self.assertEquals(0, User.objects.filter(facebook_id=int(test_user['graph_user_data']['id'])).count())
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """
@@ -594,6 +593,6 @@ def _get_friends_on_facebook(test_user):
     friends = {}
     if type(friends_data) is not bool and 'data' in friends_data:
         for friend in friends_data['data']:
-            friends[friend['name']] = friend['id']
+            friends[friend['name']] = int(friend['id'])
         assert len(friends) == len(friends_data['data'])
     return friends

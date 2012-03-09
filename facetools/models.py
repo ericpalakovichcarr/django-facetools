@@ -5,7 +5,7 @@ class TestUser(models.Model):
     A test user on facebook.
     """
     name = models.CharField(max_length=255, primary_key=True)
-    facebook_id = models.CharField(max_length=255, null=True, blank=True)
+    facebook_id = models.BigIntegerField(null=True, blank=True)
     access_token = models.CharField(max_length=255, null=True, blank=True)
     login_url = models.CharField(max_length=255, null=True, blank=True)
 
