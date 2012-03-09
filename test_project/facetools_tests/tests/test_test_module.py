@@ -3,14 +3,17 @@ import datetime
 from django.test import TestCase
 from django.conf import settings
 
-from facetools.test import FacebookTestCaseMixin
+from facetools.test import FacebookTestCase
 from facetools.test.testcases import get_app_name_from_test_case
+from facetools.signals import setup_facebook_test_client
 from facetools.models import TestUser
 from facetools.signals import setup_facebook_test_client, sync_facebook_test_user
 from facetools.integrations import fandjango
 from facetools.common import _parse_signed_request
 
 from fandjango.models import User
+
+setup_facebook_test_client.connect(fandjango.setup_facebook_test_client)
 
 class GetAppNameTestCase(TestCase):
 
@@ -33,8 +36,10 @@ class GetAppNameTestCase(TestCase):
         self.assertRaises(ValueError, f, "the_not_installed_app.tests.test_module")
         self.assertRaises(ValueError, f, "apps.the_not_installed_app.tests.test_module")
 
-class TestFacebookTestCase1(FacebookTestCaseMixin, TestCase):
-    facebook_test_user = "Unittest Mako"
+class TestFacebookTestCase1(FacebookTestCase):
+
+    def setUp(self):
+        self.test_client.set_facebook_test_user("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(2, TestUser.objects.count())
@@ -42,9 +47,11 @@ class TestFacebookTestCase1(FacebookTestCaseMixin, TestCase):
         self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
         self.assertEquals("Unittest Mako", self.test_user.name)
 
-class TestFacebookTestCase2(FacebookTestCaseMixin, TestCase):
+class TestFacebookTestCase2(FacebookTestCase):
     fixtures = ['junk_fixture.json']
-    facebook_test_user = "Unittest Mako"
+
+    def setUp(self):
+        self.test_client.set_facebook_test_user("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(3, TestUser.objects.count())
@@ -53,9 +60,11 @@ class TestFacebookTestCase2(FacebookTestCaseMixin, TestCase):
         self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
         self.assertEquals("Unittest Mako", self.test_user.name)
 
-class TestFacebookTestCase3(FacebookTestCaseMixin, TestCase):
+class TestFacebookTestCase3(FacebookTestCase):
     fixtures = ['junk_fixture.json', 'facetools_test_users_facetools_tests.json']
-    facebook_test_user = "Unittest Mako"
+
+    def setUp(self):
+        self.test_client.set_facebook_test_user("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(3, TestUser.objects.count())
@@ -64,9 +73,11 @@ class TestFacebookTestCase3(FacebookTestCaseMixin, TestCase):
         self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
         self.assertEquals("Unittest Mako", self.test_user.name)
 
-class TestFandjangoIntegration(FacebookTestCaseMixin, TestCase):
-    facebook_test_user = "Unittest Mako"
+class TestFandjangoIntegration(FacebookTestCase):
     fixtures = ['one_fandjango_user.json']
+
+    def setUp(self):
+        self.test_client.set_facebook_test_user("Unittest Mako")
 
     def _pre_setup(self):
         setup_facebook_test_client.connect(fandjango.setup_facebook_test_client)
