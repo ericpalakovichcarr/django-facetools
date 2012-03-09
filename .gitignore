@@ -1,4 +1,5 @@
 build
+MANIFEST
 *.pyc
 dist
 virenv
