@@ -1,2 +1,2 @@
 from common import TestUserNotLoaded
-from testcases import FacebookTestCase
+from testcases import FacebookTestCase, FacebookTransactionTestCase

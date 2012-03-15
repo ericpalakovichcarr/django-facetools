@@ -48,7 +48,7 @@ class FacebookTestCaseMixin(object):
                 raise TestUserNotLoaded("Test user %s hasn't been loaded via the %s fixture (did you run sync_facebook_test_users?)" %
                                         (self.facebook_test_user, facetools_fixture_name))
         else:
-            super(FacebookTestCase, self)._pre_setup()
+            super(FacebookTestCaseMixin, self)._pre_setup()
 
 def get_app_name_from_test_case(module_path_string):
     """
