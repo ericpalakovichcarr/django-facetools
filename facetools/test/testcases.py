@@ -1,6 +1,6 @@
 import types
 
-from django.test.testcases import TestCase
+import django.test.testcases
 from django.conf import settings
 from facetools.models import TestUser
 from facetools.common import _create_signed_request
@@ -8,9 +8,7 @@ from facetools.test import TestUserNotLoaded
 from facetools.signals import sync_facebook_test_user, setup_facebook_test_client
 from facetools.common import _get_facetools_test_fixture_name
 
-# TODO: Add class that subclasses TransactionTestCase as well
-
-class FacebookTestCase(TestCase):
+class FacebookTestCaseMixin(object):
     """
     TestCase which makes it possible to test views when the FacebookMiddleware
     and SyncFacebookUser middlewares are activated.  Must use the Client
@@ -30,7 +28,7 @@ class FacebookTestCase(TestCase):
                 self.fixtures = []
             if facetools_fixture_name not in self.fixtures:
                 self.fixtures.append(facetools_fixture_name)
-            super(FacebookTestCase, self)._pre_setup()
+            super(FacebookTestCaseMixin, self)._pre_setup()
 
             # Make sure anybody that needs to sync their models loaded from fixtures
             # has a chance to do so now that the refreshed user test data is available.
@@ -68,3 +66,17 @@ def get_app_name_from_test_case(module_path_string):
     if app_name not in settings.INSTALLED_APPS:
         raise ValueError("Facetools didn't find %s among INSTALLED_APPS. (app name pulled from %s)" % (app_name, module_path_string))
     return app_name
+
+# -----------------------------------------------------------------------------
+# Test Cases
+# -----------------------------------------------------------------------------
+class FacebookTransactionTestCase(FacebookTestCaseMixin, django.test.testcases.TransactionTestCase):
+    def _pre_setup(self):
+        super(FacebookTransactionTestCase, self)._pre_setup()
+class FacebookTestCase(FacebookTestCaseMixin, django.test.testcases.TestCase):
+    def _pre_setup(self):
+        super(FacebookTestCase, self)._pre_setup()
+if 'LiveServerTestCase' in dir(django.test.testcases):
+    class FacebookLiveServerTestCase(FacebookTestCaseMixin, django.test.testcases.LiveServerTestCase):
+        def _pre_setup(self):
+            super(FacebookLiveServerTestCase, self)._pre_setup()
