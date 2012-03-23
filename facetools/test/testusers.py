@@ -55,16 +55,18 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
         try: data = json.loads(r.content)
         except: data = None
         if r.status_code != 200 or data is None or data == False or 'error' in data:
-            if attempts > 0:
-                continue
-            try:
-                raise CreateTestUserError(data['error']['message'])
-            except:
-                try:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
-                except:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
+            continue
         return data
+    else:
+        try:
+            raise CreateTestUserError(data['error']['message'])
+        except CreateTestUserError: raise
+        except:
+            try:
+                raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+            except CreateTestUserError: raise
+            except:
+                raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
     raise CreateTestUserError("Request to create test user failed")
 
 def _create_test_user_in_facetools(name, facebook_data):
