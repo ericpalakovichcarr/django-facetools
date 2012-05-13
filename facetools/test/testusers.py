@@ -1,13 +1,14 @@
 import urllib
-import time
+import datetime
 
 from facetools import json
-from django.conf import settings
+from facetools import settings
 from facetools.common import _get_app_access_token, _create_permissions_string
 from facetools.models import TestUser
 import requests
 
 class CreateTestUserError(Exception): pass
+class CreateTestUserWarn(Warning): pass
 class DeleteTestUserError(Exception): pass
 class NotATestUser(Exception): pass
 
@@ -34,6 +35,7 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
     Creates a test user on facebook.  Returns a dict of the json response from facebook.
     """
     test_user_template = "https://graph.facebook.com/%s/accounts/test-users?installed=%s&permissions=%s&method=post&access_token=%s"
+    extended_token_template = "https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=fb_exchange_token&fb_exchange_token=%s"
 
     # Generate the request URL
     if app_installed == True:
@@ -49,9 +51,9 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
     if name:
         test_user_url = '%s&name=%s' % (test_user_url,urllib.quote(name))
 
-    # Request a new test user from facebook
-    for attempts in range(3, 0, -1):
-        r = requests.get(test_user_url)
+    # Request a new test user from facebook, giving it a few tries in case the endpoint has a temporary hiccup
+    for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
+        r = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
         try: data = json.loads(r.content)
         except: data = None
         if r.status_code != 200 or data is None or data == False or 'error' in data:
@@ -64,12 +66,79 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
                     raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
                 except:
                     raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
-        return data
-    raise CreateTestUserError("Request to create test user failed")
+        break
+    else:
+        raise CreateTestUserError("Request to create test user failed")
+
+    # Get an extended expiration date access token
+    if data and data.get('access_token') is not None:
+        extended_token_url = extended_token_template % (settings.FACEBOOK_APPLICATION_ID,
+                                                        settings.FACEBOOK_APPLICATION_SECRET_KEY,
+                                                        data['access_token'])
+        data['access_token'] = _get_extended_token_json(extended_token_url)
+
+    return data
+
+def _get_create_user_json(test_user_url):
+    """
+    Sends a request to the Graph API for a new test user.  Returns the resulting JSON.
+    """
+    for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
+        r = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+        try: data = json.loads(r.content)
+        except: data = None
+        if r.status_code != 200 or data is None or data == False or 'error' in data:
+            if attempts > 0:
+                continue
+            try:
+                raise CreateTestUserError(data['error']['message'])
+            except:
+                try:
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                except:
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
+        break
+    else:
+        raise CreateTestUserError("Request to create test user failed")
+
+    return data
+
+def _get_extended_token_json(extended_token_url):
+    """
+    Sends a request to the Graph API for a new test user.  Returns the resulting JSON.
+    """
+    for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
+        r = requests.get(extended_token_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+        try: access_token = json.loads(r.content)
+        except: access_token = None
+        if r.status_code != 200 or access_token is None or access_token == False or 'error' in access_token:
+            if attempts > 0:
+                continue
+            try:
+                raise CreateTestUserWarn("Failed to extend access token: %s" % access_token['error']['message'])
+            except:
+                try:
+                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                except:
+                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s)" % r.status_code)
+        break
+    else:
+        raise CreateTestUserWarn("Request to extend access token failed")
+
+    return access_token
 
 def _create_test_user_in_facetools(name, facebook_data):
+    """
+    Takes the JSON from creating a test user in the Graph API and creates a new TestUser record in the database.
+    """
     # Add the user to the test user table
     if 'id' in facebook_data:
+        from ipdb import set_trace; set_trace()
+        expires = int(facebook_data.get('expires', 0))
+        if not expires:
+            expires = None
+        else:
+            expires = datetime.datetime.fromtimestamp(expires)
         try:
             test_user = TestUser.objects.get(facebook_id=int(facebook_data['id']))
         except TestUser.DoesNotExist:
@@ -80,10 +149,12 @@ def _create_test_user_in_facetools(name, facebook_data):
                 name=name,
                 facebook_id=str(facebook_data['id']),
                 access_token=facebook_data.get('access_token'),
+                access_token_expires=expires,
                 login_url=facebook_data.get('login_url')
             )
         else:
             test_user.access_token = facebook_data.get('access_token')
+            test_user.access_token_expires = expires
             test_user.login_url = facebook_data.get('login_url')
             test_user.save()
     else:

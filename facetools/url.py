@@ -8,13 +8,13 @@ from django.conf import settings
 def translate_url_to_facebook_url(url):
     """
     Converts a url on the canvas path to it's facebook equivalent.  Requires
-    FACEBOOK_CANVAS_URL and FACEBOOK_CANVAS_PAGE to be set in your Django
+    FACEBOOK_APPLICATION_CANVAS_URL and FACEBOOK_APPLICATION_CANVAS_PAGE to be set in your Django
     settings.
 
     ex: http://localhost:8000/canvas/page/ becomes https://apps.facebook.com/my_facebook_app/page/
     """
     url_parts = urlparse(url)
-    canvas_url = settings.FACEBOOK_CANVAS_URL
+    canvas_url = settings.FACEBOOK_APPLICATION_CANVAS_URL
     if canvas_url.endswith('/'): canvas_url = canvas_url[:-1]
     canvas_parts = urlparse(canvas_url)
 
@@ -31,7 +31,7 @@ def translate_url_to_facebook_url(url):
     if not url_parts.path.startswith(canvas_parts.path):
         return url
 
-    facebook_url = settings.FACEBOOK_CANVAS_PAGE
+    facebook_url = settings.FACEBOOK_APPLICATION_CANVAS_PAGE
     if facebook_url.endswith('/'): facebook_url = facebook_url[:-1]
     start = len(url_parts.scheme) + len(url_parts.netloc)
     if url_parts.scheme.strip():

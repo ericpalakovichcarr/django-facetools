@@ -1,7 +1,7 @@
 FACEBOOK_APPLICATION_ID = '301572769893123'
 FACEBOOK_APPLICATION_NAMESPACE = "django-facetools"
-FACEBOOK_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
-FACEBOOK_CANVAS_URL = "http://localhost:8000/canvas/"
+FACEBOOK_APPLICATION_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
+FACEBOOK_APPLICATION_CANVAS_URL = "http://localhost:8000/canvas/"
 from FACEBOOK_APPLICATION_SECRET_KEY import *
 
 DATABASES = {

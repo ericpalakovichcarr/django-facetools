@@ -1,6 +1,7 @@
 import os
 from facetools import json
 import copy
+import datetime
 
 import requests
 from django.test import TestCase
@@ -22,6 +23,9 @@ class SyncFacebookTestUsersTests(TestCase):
     def tearDown(self):
         for test_user in TestUser.objects.all():
             test_user.delete() # should also delete facebook test user through delete method override
+
+    def assertAccessTokenExpirationDate(self, facebook_user):
+        self.assertTrue(facebook_user.access_token_expires - datetime.datetime.now() > datetime.timedelta(days=5))
 
     def test_get_test_user_relationships(self):
         t1 = [{'name': 'Unittest Jacobs', 'friends': ['Unittest Deschain','Unittest Billows']},
@@ -71,6 +75,8 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(test_users[0]['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
+        from ipdb import set_trace; set_trace()
+        self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp1, 'testapp1', facebook_test_users)
@@ -101,6 +107,7 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
+        self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp1, 'testapp1', facebook_test_users)
@@ -134,6 +141,7 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+            self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp2, 'testapp2', t2())
@@ -161,6 +169,7 @@ class SyncFacebookTestUsersTests(TestCase):
                 self.assertEqual(friends_on_facebook[friend_name],
                                  TestUser.objects.get(name=friend_name).facebook_id)
 
+
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
         for user in TestUser.objects.all():
@@ -168,6 +177,7 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+            self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp2, 'testapp2', t2())
@@ -202,6 +212,7 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+            self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp3, 'testapp3', t3())
@@ -237,6 +248,7 @@ class SyncFacebookTestUsersTests(TestCase):
             self.assertEquals(test_user['name'], user.name)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
+            self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
         self.assertTestUserFixture(testapp3, 'testapp3', t3())

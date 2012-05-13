@@ -7,6 +7,8 @@ class TestUser(models.Model):
     name = models.CharField(max_length=255, primary_key=True)
     facebook_id = models.BigIntegerField(null=True, blank=True)
     access_token = models.CharField(max_length=255, null=True, blank=True)
+    access_token_issued_at = models.DateTimeField(null=True)
+    access_token_expires = models.DateTimeField(null=True)
     login_url = models.CharField(max_length=255, null=True, blank=True)
 
     def delete(self, *args, **kwargs):
@@ -23,4 +25,3 @@ class TestUser(models.Model):
 
     def __unicode__(self):
         return self.name
-

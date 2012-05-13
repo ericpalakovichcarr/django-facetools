@@ -380,8 +380,8 @@ We're going to solve all these problems using Facetools.  Do the following:
     FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
 
     # New settings you're adding now
-    FACEBOOK_CANVAS_PAGE = "Your canvas page here"
-    FACEBOOK_CANVAS_URL = "The value from Secure Canvas URL here"
+    FACEBOOK_APPLICATION_CANVAS_PAGE = "Your canvas page here"
+    FACEBOOK_APPLICATION_CANVAS_URL = "The value from Secure Canvas URL here"
 
 3. Add `{% load facetools_tags %}` to the top of all three template *.html files.
 
@@ -423,7 +423,7 @@ How did Facetools help?
 -----------------------
 
 The `facebook_url` tags automatically translate any url path that falls in
-the FACEBOOK_CANVAS_URL and translates it to it's facebook equivalent.
+the FACEBOOK_APPLICATION_CANVAS_URL and translates it to it's facebook equivalent.
 
 The `facebook_redirect` function applies the same logic, acting as a substitute for
 `HttpResponseRedirect` and `django.urlresolvers.reverse`.  It replaces the redirect resonse
