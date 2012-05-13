@@ -134,11 +134,9 @@ def _create_test_user_in_facetools(name, facebook_data):
     # Add the user to the test user table
     if 'id' in facebook_data:
         from ipdb import set_trace; set_trace()
-        expires = int(facebook_data.get('expires', 0))
-        if not expires:
-            expires = None
-        else:
-            expires = datetime.datetime.fromtimestamp(expires)
+        ts2dt = lambda x: datetime.datetime.fromtimestamp(expires) if x != 0 else None
+        issued_at = ts2dt(int(facebook_data.get('issued_at', 0)))
+        expires = ts2dt(int(facebook_data.get('expires', 0)))
         try:
             test_user = TestUser.objects.get(facebook_id=int(facebook_data['id']))
         except TestUser.DoesNotExist:
@@ -149,11 +147,13 @@ def _create_test_user_in_facetools(name, facebook_data):
                 name=name,
                 facebook_id=str(facebook_data['id']),
                 access_token=facebook_data.get('access_token'),
+                access_token_issued_at=issued_at,
                 access_token_expires=expires,
                 login_url=facebook_data.get('login_url')
             )
         else:
             test_user.access_token = facebook_data.get('access_token')
+            test_user.access_token_issued_at = issued_at,
             test_user.access_token_expires = expires
             test_user.login_url = facebook_data.get('login_url')
             test_user.save()
