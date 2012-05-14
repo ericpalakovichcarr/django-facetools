@@ -42,7 +42,9 @@ class Command(BaseCommand):
         if test_users == False:
             return
 
-        existing_facebook_test_users = _get_existing_facebook_test_users()
+        # Get the graph information from any test users defined in the facebook app,
+        # and then get a list of test users that exist both on facebook and in our database
+        existing_facebook_test_users = _get_existing_facebook_test_users() # dict {test_user_name: graph_data}
         existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
         existing_test_users = set(existing_facebook_test_users.keys() + existing_facetool_test_users)
 

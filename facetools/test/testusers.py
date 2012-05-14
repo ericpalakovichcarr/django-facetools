@@ -53,22 +53,24 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
 
     # Request a new test user from facebook, giving it a few tries in case the endpoint has a temporary hiccup
     for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
-        r = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
-        try: data = json.loads(r.content)
+        response = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+        try: data = json.loads(response.content)
         except: data = None
-        if r.status_code != 200 or data is None or data == False or 'error' in data:
+        if response.status_code != 200 or data is None or data == False or 'error' in data:
             if attempts > 0:
                 continue
             try:
                 raise CreateTestUserError(data['error']['message'])
             except:
                 try:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (response.status_code, response.content))
                 except:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % response.status_code)
         break
     else:
         raise CreateTestUserError("Request to create test user failed")
+
+    import ipdb; ipdb.set_trace()
 
     # Get an extended expiration date access token
     if data and data.get('access_token') is not None:
@@ -84,19 +86,19 @@ def _get_create_user_json(test_user_url):
     Sends a request to the Graph API for a new test user.  Returns the resulting JSON.
     """
     for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
-        r = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
-        try: data = json.loads(r.content)
+        response = requests.get(test_user_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+        try: data = json.loads(response.content)
         except: data = None
-        if r.status_code != 200 or data is None or data == False or 'error' in data:
+        if response.status_code != 200 or data is None or data == False or 'error' in data:
             if attempts > 0:
                 continue
             try:
                 raise CreateTestUserError(data['error']['message'])
             except:
                 try:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s and content=\"%s\")" % (response.status_code, response.content))
                 except:
-                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % r.status_code)
+                    raise CreateTestUserError("Request to create test user failed (status_code=%s)" % response.status_code)
         break
     else:
         raise CreateTestUserError("Request to create test user failed")
@@ -108,19 +110,21 @@ def _get_extended_token_json(extended_token_url):
     Sends a request to the Graph API for a new test user.  Returns the resulting JSON.
     """
     for attempts in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS, 0, -1):
-        r = requests.get(extended_token_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
-        try: access_token = json.loads(r.content)
+        response = requests.get(extended_token_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+        try:
+            access_token = json.loads(response.content)
+            import ipdb; ipdb.set_trace()
         except: access_token = None
-        if r.status_code != 200 or access_token is None or access_token == False or 'error' in access_token:
+        if response.status_code != 200 or access_token is None or access_token == False or 'error' in access_token:
             if attempts > 0:
                 continue
             try:
                 raise CreateTestUserWarn("Failed to extend access token: %s" % access_token['error']['message'])
             except:
                 try:
-                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s and content=\"%s\")" % (r.status_code, r.content))
+                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s and content=\"%s\")" % (response.status_code, response.content))
                 except:
-                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s)" % r.status_code)
+                    raise CreateTestUserWarn("Request to extend access token failed (status_code=%s)" % response.status_code)
         break
     else:
         raise CreateTestUserWarn("Request to extend access token failed")
@@ -163,17 +167,17 @@ def _create_test_user_in_facetools(name, facebook_data):
 def _delete_test_user_on_facebook(test_user):
     delete_url_template = "https://graph.facebook.com/%s?method=delete&access_token=%s"
     delete_user_url = delete_url_template % (test_user.facebook_id, _get_app_access_token())
-    r = requests.delete(delete_user_url)
-    if not isinstance(r.content, basestring):
-        raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned invalid response" % (test_user.name, test_user.facebook_id, r.content))
-    if r.content.strip().lower() != "true":
-        if r.content.strip().lower() == "false":
-            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned false" % (test_user.name, test_user.facebook_id, r.content))
+    response = requests.delete(delete_user_url)
+    if not isinstance(response.content, basestring):
+        raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned invalid response" % (test_user.name, test_user.facebook_id, response.content))
+    if response.content.strip().lower() != "true":
+        if response.content.strip().lower() == "false":
+            raise DeleteTestUserError("Error deleting user %s (%s) from facebook: Facebook returned false" % (test_user.name, test_user.facebook_id, response.content))
         else:
             try:
-                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(r.content)['error']['message']))
+                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, json.loads(response.content)['error']['message']))
             except:
-                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, r.content))
+                raise DeleteTestUserError("Error deleting user %s (%s) from facebook: %s" % (test_user.name, test_user.facebook_id, response.content))
 
 # -------------------------------------------------------------------------------------
 # Functions for creating friends between test users
