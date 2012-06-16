@@ -39,45 +39,45 @@ class GetAppNameTestCase(TestCase):
 class TestFacebookTestCase1(FacebookTestCase):
 
     def setUp(self):
-        self.test_client.set_facebook_test_user("Unittest Mako")
+        self.client.facebook_login("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(2, TestUser.objects.count())
         self.assertEquals(1, TestUser.objects.filter(name="Unittest Shinra").count())
-        self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
-        self.assertEquals("Unittest Mako", self.test_user.name)
+        self.assertEquals(self.client.test_user, TestUser.objects.get(name="Unittest Mako"))
+        self.assertEquals("Unittest Mako", self.client.test_user.name)
 
 class TestFacebookTestCase2(FacebookTestCase):
     fixtures = ['junk_fixture.json']
 
     def setUp(self):
-        self.test_client.set_facebook_test_user("Unittest Mako")
+        self.client.facebook_login("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(3, TestUser.objects.count())
         self.assertEquals(1, TestUser.objects.filter(name="Unittest Shinra").count())
         self.assertEquals(1, TestUser.objects.filter(name="Unittest Junk").count())
-        self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
-        self.assertEquals("Unittest Mako", self.test_user.name)
+        self.assertEquals(self.client.test_user, TestUser.objects.get(name="Unittest Mako"))
+        self.assertEquals("Unittest Mako", self.client.test_user.name)
 
 class TestFacebookTestCase3(FacebookTestCase):
     fixtures = ['junk_fixture.json', 'facetools_test_users_facetools_tests.json']
 
     def setUp(self):
-        self.test_client.set_facebook_test_user("Unittest Mako")
+        self.client.facebook_login("Unittest Mako")
 
     def test_user_fixture_loaded(self):
         self.assertEquals(3, TestUser.objects.count())
         self.assertEquals(1, TestUser.objects.filter(name="Unittest Shinra").count())
         self.assertEquals(1, TestUser.objects.filter(name="Unittest Junk").count())
-        self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
-        self.assertEquals("Unittest Mako", self.test_user.name)
+        self.assertEquals(self.client.test_user, TestUser.objects.get(name="Unittest Mako"))
+        self.assertEquals("Unittest Mako", self.client.test_user.name)
 
 class TestFandjangoIntegration(FacebookTestCase):
     fixtures = ['one_fandjango_user.json']
 
     def setUp(self):
-        self.test_client.set_facebook_test_user("Unittest Mako")
+        self.client.facebook_login("Unittest Mako")
 
     def _pre_setup(self):
         setup_facebook_test_client.connect(fandjango.setup_facebook_test_client)

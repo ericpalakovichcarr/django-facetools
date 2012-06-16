@@ -7,6 +7,14 @@ import time
 from django.conf import settings
 from facetools import json
 
+class FacebookError(Exception):
+    """
+    An error for a Facebook API call.  Contains the error message from facebook and it's error code.
+    """
+    def __init__(self, message, code=None):
+        super(FacebookException, self).__init__(message)
+        self.code = code
+
 def _get_app_access_token(app_id=None, app_secret=None):
     """
     Creates the app access token using either specified Facebook app settings

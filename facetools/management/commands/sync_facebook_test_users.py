@@ -10,7 +10,7 @@ import requests
 from facetools.test.testusers import _create_test_user, _friend_test_users, _create_test_user_on_facebook
 from facetools.signals import sync_facebook_test_user
 from facetools.models import TestUser
-from facetools.common import _get_facetools_test_fixture_name
+from facetools.common import _get_facetools_test_fixture_name, FacebookError
 
 
 class Command(BaseCommand):
@@ -135,12 +135,12 @@ def _get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, a
             if attempts > 0:
                 continue
             try:
-                raise Exception("Error retrieving facebook app's test users: %s" % users_response_data['error']['message'])
+                raise FacebookError("Error retrieving facebook app's test users: %s" % users_response_data['error']['message'])
             except:
                 try:
-                    raise Exception("Error retrieving facebook app's test users: status_code=%s, content=\"%s\"" % (response.status_code, response.content))
+                    raise FacebookError("Error retrieving facebook app's test users: status_code=%s, content=\"%s\"" % (response.status_code, response.content))
                 except:
-                    raise Exception("Error retrieving facebook app's test users: status_code=%s" % response.status_code)
+                    raise FacebookError("Error retrieving facebook app's test users: status_code=%s" % response.status_code)
         else:
             break
 

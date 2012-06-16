@@ -70,8 +70,6 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
     else:
         raise CreateTestUserError("Request to create test user failed")
 
-    import ipdb; ipdb.set_trace()
-
     # Get an extended expiration date access token
     if data and data.get('access_token') is not None:
         extended_token_url = extended_token_template % (settings.FACEBOOK_APPLICATION_ID,
@@ -113,7 +111,6 @@ def _get_extended_token_json(extended_token_url):
         response = requests.get(extended_token_url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
         try:
             access_token = json.loads(response.content)
-            import ipdb; ipdb.set_trace()
         except: access_token = None
         if response.status_code != 200 or access_token is None or access_token == False or 'error' in access_token:
             if attempts > 0:
@@ -137,7 +134,6 @@ def _create_test_user_in_facetools(name, facebook_data):
     """
     # Add the user to the test user table
     if 'id' in facebook_data:
-        from ipdb import set_trace; set_trace()
         ts2dt = lambda x: datetime.datetime.fromtimestamp(expires) if x != 0 else None
         issued_at = ts2dt(int(facebook_data.get('issued_at', 0)))
         expires = ts2dt(int(facebook_data.get('expires', 0)))

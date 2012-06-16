@@ -75,7 +75,6 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(test_users[0]['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
-        from ipdb import set_trace; set_trace()
         self.assertAccessTokenExpirationDate(user)
 
         # Make sure the generated fixture is correct
