@@ -1,3 +1,7 @@
+import os
+
+PROJECT_DIR = os.path.abspath(os.path.join(os.path.realpath(__file__), '../'))
+
 FACEBOOK_APPLICATION_ID = '475844212430669'
 FACEBOOK_APPLICATION_NAMESPACE = "django-facetools"
 FACEBOOK_APPLICATION_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
@@ -50,7 +54,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
-TEMPLATE_DIRS = ()
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_DIR, 'templates'),
+)
 
 LOGGING = {
     'version': 1,

@@ -46,7 +46,7 @@ def _get_facetools_test_fixture_name(app_name):
 # https://github.com/reikje
 # ---------------------------------------------------------------------
 
-def _parse_signed_request(signed_request, app_secret):
+def parse_signed_request(signed_request, app_secret):
     """Return dictionary with signed request data."""
     try:
         l = signed_request.split('.', 2)
@@ -70,7 +70,7 @@ def _parse_signed_request(signed_request, app_secret):
     else:
         return data
 
-def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None, add_default_data=True):
+def create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=None, expires=None, app_data=None, page=None, add_default_data=True):
     """
     Returns a string that is a valid signed_request parameter specified by Facebook
     see: http://developers.facebook.com/docs/authentication/signed_request/
@@ -90,9 +90,9 @@ def _create_signed_request(app_secret, user_id=1, issued_at=None, oauth_token=No
         -- issued_at
 
     Examples:
-        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY)
-        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199)
-        _create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199, issued_at=1254459600)
+        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY)
+        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199)
+        create_signed_request(FACEBOOK_APPLICATION_SECRET_KEY, user_id=199, issued_at=1254459600)
 
     """
     payload = {

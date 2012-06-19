@@ -14,7 +14,7 @@ from facetools.common import _get_app_access_token
 from facetools.test.testusers import _delete_test_user_on_facebook
 from facetools.models import TestUser
 from facetools.management.commands.sync_facebook_test_users import _get_app_fixture_directory, _get_facetools_test_fixture_name, _clean_test_user_fixture
-from facetools.signals import setup_facebook_test_client, sync_facebook_test_user
+from facetools.signals import sync_facebook_test_user
 from facetools.integrations import fandjango
 from test_project import testapp1, testapp2, testapp3
 

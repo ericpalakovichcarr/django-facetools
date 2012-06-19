@@ -20,22 +20,12 @@ def sync_facebook_test_user(sender, **kwargs):
             first_name=first_name,
             middle_name=middle_name,
             last_name=last_name)
-    except models.User.DoesNotExist:
         if user_installed_app:
-            db_user = models.User()
-            db_user.first_name = first_name
-            db_user.middle_name = middle_name
-            db_user.last_name = last_name
-            db_user.oauth_token = models.OAuthToken.objects.create(token="", issued_at=datetime.datetime.now())
+            db_user.facebook_id = int(kwargs['test_user'].facebook_id)
+            db_user.oauth_token.token = kwargs['test_user'].access_token
+            db_user.save()
+            db_user.oauth_token.save()
         else:
-            db_user = None
-    if user_installed_app and db_user is not None:
-        db_user.facebook_id = int(kwargs['test_user'].facebook_id)
-        db_user.oauth_token.token = kwargs['test_user'].access_token
-        db_user.save()
-        db_user.oauth_token.save()
-    elif db_user is not None:
-        db_user.delete()
-
-def setup_facebook_test_client(sender, **kwargs):
-    kwargs['client'].cookies['signed_request'] = kwargs['signed_request']
+            db_user.delete()
+    except models.User.DoesNotExist:
+        pass

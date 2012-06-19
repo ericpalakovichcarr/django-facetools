@@ -4,7 +4,7 @@
         "model": "fandjango.oauthtoken",
         "fields": {
             "issued_at": "2011-11-01 14:09:28",
-            "token": "AAADRl8p2NnABAAI0ima5W5R2R2mvOij975cjLtpTLZBgWY0mtvO2oxAYPEQDFBExVgepvsnc3vUnOewgr9ItDDpDZBUmZCOmu9Nc7rXZAFS0vC3iGdWy",
+            "token": "will_change_after_sync",
             "expires_at": "2311-11-01 14:09:28"
         }
     },
@@ -12,7 +12,7 @@
         "pk": 5,
         "model": "fandjango.user",
         "fields": {
-            "facebook_id": 100003104442433,
+            "facebook_id": 6238798,
             "facebook_username": null,
             "first_name": "Unittest",
             "middle_name": null,
