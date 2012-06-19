@@ -15,7 +15,7 @@ Here's how we're going to modify the poll app:
 * Let users invite their friends to vote in the poll
 * Add more tests to cover the new features
 
-We'll be using `django-facetools` along with `fandjango` to make this happen.
+We'll be using Django 1.4 for this example, along with `django-facetools` and `fandjango` to make this happen.
 
 Get the example app
 ===================
@@ -267,7 +267,7 @@ following values for your app settings:
 * Category: Leave it on Other
 
 In the *Select how your app integrates with Facebook* section, click the checkmark
-next to *App on Facebook*.  Next enter `https://localhost:8000/canvas/` for the *Canvas
+next to *App on Facebook*.  Next enter `http://localhost:8000/canvas/` for the *Canvas
 URL*.  Leave the secure canvas canvas url blank, as we'll be running this site as a development
 site.
 
@@ -323,7 +323,7 @@ attacks.  Time to bring out Fandjango.
 Installing and configuring Fandjango
 ------------------------------------
 
-Assuming you installed the requirments file, Fandjango should already available in your virtualenv.
+Assuming you installed the requirments file, Fandjango should already be available in your virtualenv.
 
 Setting up Fandjango is easy.  In `settings.py`:
 
@@ -378,6 +378,7 @@ We're going to solve all these problems using Facetools.  Do the following:
     # existing settings you've already entered, and are required by facetools
     FACEBOOK_APPLICATION_ID = "Your App ID / API Key here"
     FACEBOOK_APPLICATION_SECRET_KEY = "Your App Secret here"
+    FACEBOOK_APPLICATION_NAMESPACE = "your-app-namespace"
 
     # New settings you're adding now
     FACEBOOK_APPLICATION_CANVAS_PAGE = "Your canvas page here"
@@ -413,7 +414,7 @@ It should look like this::
         else:
             selected_choice.votes += 1
             selected_choice.save()
-            return facebook_redirect(reverse('poll_results', args=(p.id,)))
+            return facebook_redirect('poll_results', p.id)
 
 Save your changes, do `runserver` again if it's not running, and go to the index page again
 in your browser.  Now the url for each poll points to the the page in facebook. And when you
@@ -423,10 +424,10 @@ How did Facetools help?
 -----------------------
 
 The `facebook_url` tags automatically translate any url path that falls in
-the FACEBOOK_APPLICATION_CANVAS_URL and translates it to it's facebook equivalent.
+the `FACEBOOK_APPLICATION_CANVAS_URL` and translates it to it's facebook equivalent.
 
 The `facebook_redirect` function applies the same logic, acting as a substitute for
-`HttpResponseRedirect` and `django.urlresolvers.reverse`.  It replaces the redirect resonse
+`HttpResponseRedirect` and `django.urlresolvers.reverse`.  It replaces the redirect response
 object with a regular html result.  The html consists of a redirect via javascript.  It'll
 look something like this::
 
@@ -462,7 +463,7 @@ class in the `polls/tests.py` file from this::
     # Make sure after voting the user is redirected to the results page
     expected_redirect_url = reverse("poll_results", args=[poll.pk])
     self.assertEquals(302, response.status_code)
-    self.assertIn(expected_redirect_url, response.content)
+    self.assertTrue(response['Location'].endswith(expected_redirect_url))
 
 to this::
 
@@ -559,8 +560,7 @@ MIDDLEWARE_CLASSES, which should look this this when you're done::
 Adding Facebook open graph data to a template
 =============================================
 
-Change the
-template under `polls/templates/polls/index.html` so it looks like this::
+Change the template under `polls/templates/polls/index.html` so it looks like this::
 
     {% load facetools_tags %}
 
@@ -608,7 +608,7 @@ without creating fake accounts in facebook.  You can read up about
 it here: http://developers.facebook.com/docs/test_users/
 
 Facetools provides a means of managing your test users so that they
-can be created and used automatically in your tests across one or
+can be created and used automatically in your tests across one or more
 environments (development vs staging).
 
 We're going to update our tests to ensure the open graph data is
@@ -617,7 +617,7 @@ working correctly on our site, with a little help from Facetools
 Setup Facebook Test Users in Facetools
 --------------------------------------
 
-First we'll deine our facebook test user.  Create the file
+First we'll define our facebook test user.  Create the file
 `polls/facebook_test_users.py` with the following content::
 
     facebook_test_users = [
@@ -690,11 +690,13 @@ so it look like this::
 
     class ServerSideTests(FacebookTestCase):
         fixtures = ['polls.json']
-        facebook_test_user = "Sam Samson"
 
         def test_index(self):
+            # Setup the test client so it mimics Sam Samson's making requests via apps.facebook.com.
+            self.client.facebook_login("Sam Samson")
+
             # The view should return a valid page with the correct template
-            response = self.client.get(reverse("poll_index"))
+            response = self.client.facebook_get(reverse("poll_index"))
             self.assertEquals(200, response.status_code)
             self.assertTemplateUsed(response, "polls/index.html")
             self.assertIn('latest_poll_list', response.context)
@@ -711,36 +713,47 @@ so it look like this::
 
 We've done a few things here.  First, we've imported a FacebookTestCase,
 and then changed the parent class of ServerSideTests from TestCase to
-FacebookTestCase.  Using this class will make the Django test client mock
-a request as if made from the facebook canvas page, giving you access to a
+FacebookTestCase.  We then use the `facebook_login` to modify the test client.
+Passing in our test user's name will allow the test client to mock a request
+as if made from the facebook canvas page, giving you access to a
 signed request of the specified test user, in this case "Sam Samson".
-It'll also supply us with `self.test_user`, the `TestUser` object of "Sam Samson".
+It'll also supply us with `self.client.test_user`, the `TestUser` object of "Sam Samson".
 
-Integrate Fandjango into the tests
-----------------------------------
+**Extra** - You can also create your own client by using the `facetools.test.FacebookClient` class.
 
-Next we'll need to hook into Facetools' signals.  One is for
-syncing any of your user data models with the up-to-date (thanks to `sync_facebook_test_users`)
-test user data (in particular their access tokens).  THe second is to update
-the test client to include the signed request, e.g. via a cookie.
+    from facetools.test import FacebookClient
+    client = FacebookClient()
+
+    client.facebook_login("Sam Samson")
+    client.facebook_get("poll_index")
+
+Now if you go ahead and run the tests again everything should pass.
+
+Extra - Keeping User models with facebook data in sync
+------------------------------------------------------
+
+Technically, this next section won't affect this project.
+
+Next we'll need to hook into one of Facetools' signals.  The `sync_facebook_test_users` will fire
+when a test user's facebook information has been updated.  This is useful for syncing your app's
+user model representing that test user with the new data freshely pulled form Facebook (in particular
+their access token).
 
 If you are using Fandjango then we can use functions provided by Facetools.
 Add the following code at the top of `polls/models.py`::
 
     # ... other imports ...#
 
-    from facetools.signals import sync_facebook_test_user, setup_facebook_test_client
+    from facetools.signals import sync_facebook_test_user
     from facetools.integrations import fandjango
     sync_facebook_test_user.connect(fandjango.sync_facebook_test_user)
-    setup_facebook_test_client(fandjango.setup_facebook_test_client)
 
     # ... rest of file ...#
 
-With this, we'll have a Fandjango User record created for our test user before each test is ran,
-complete with the proper acesss token.  And we'll also have a signed request for the test user
-added to a cookie that Fandjango sets when a user logins on the real Facebook canvas site.
-
-Now if you go ahead and run the tests again everything should pass.
+This would be useful if we defined Fandjango User records in a test fixture.  As out test user's
+information changes (either from expired access tokens or moving to a different environemtn like staging)
+the test fixture would have out-of-date facebook information.  Wiring this signal up allows you
+ to update records created by the fixture after their loaded into the database.
 
 Wrap Up
 =======

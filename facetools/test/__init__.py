@@ -1,5 +1,5 @@
 from common import TestUserNotLoaded
-from testcases import FacebookTestCase, FacebookTransactionTestCase, FacebookTestCaseMixin
+from testcases import FacebookClient, FacebookTestCase, FacebookTransactionTestCase, FacebookTestCaseMixin
 try:
     from testcases import FacebookLiveServerTestCase
 except:

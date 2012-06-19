@@ -44,11 +44,12 @@ Configure Django
         'facetools',
     )
 
-- Also set the ``FACEBOOK_APPLICATION_ID``, ``FACEBOOK_APPLICATION_SECRET_KEY``,
-  ``FACEBOOK_APPLICATION_CANVAS_URL``. and ``FACEBOOK_APPLICATION_CANVAS_PAGE`` settings::
+- Also set the ``FACEBOOK_APPLICATION_ID``, ``FACEBOOK_APPLICATION_SECRET_KEY``, ``FACEBOOK_APPLICATION_NAMESPACE``,
+  ``FACEBOOK_APPLICATION_CANVAS_PAGE``, and ``FACEBOOK_APPLICATION_CANVAS_URL`` in your settings.py file::
 
     FACEBOOK_APPLICATION_ID = '301572769893123'
     FACEBOOK_APPLICATION_SECRET_KEY = '[insert your secret key]'
-    FACEBOOK_APPLICATION_CANVAS_URL = 'https://myapp.mycompany.com/canvas/'
+    FACEBOOK_APPLICATION_NAMESPACE = 'myapp'
     FACEBOOK_APPLICATION_CANVAS_PAGE = 'http://apps.facebook.com/myapp'
+    FACEBOOK_APPLICATION_CANVAS_URL = 'https://myapp.mycompany.com/canvas/'
 
