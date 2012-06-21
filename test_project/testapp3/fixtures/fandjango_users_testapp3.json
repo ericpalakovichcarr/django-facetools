@@ -1,0 +1,77 @@
+[
+    {
+        "pk": 5,
+        "model": "fandjango.oauthtoken",
+        "fields": {
+            "issued_at": "2011-11-01 14:09:28",
+            "token": "will_change_after_sync",
+            "expires_at": "2311-11-01 14:09:28"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "fandjango.user",
+        "fields": {
+            "facebook_id": 6238798,
+            "facebook_username": null,
+            "first_name": "Unittest",
+            "middle_name": null,
+            "last_name": "Vanilla",
+            "birthday": "1980-08-08",
+            "authorized": true,
+            "oauth_token": 5,
+            "created_at": "2011-11-01 14:09:29",
+            "last_seen_at": "2011-11-01 14:09:29"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "fandjango.oauthtoken",
+        "fields": {
+            "issued_at": "2011-11-01 14:09:28",
+            "token": "will_change_after_sync",
+            "expires_at": "2311-11-01 14:09:28"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "fandjango.user",
+        "fields": {
+            "facebook_id": 9089747,
+            "facebook_username": null,
+            "first_name": "Unittest",
+            "middle_name": null,
+            "last_name": "More",
+            "birthday": "1980-08-08",
+            "authorized": true,
+            "oauth_token": 6,
+            "created_at": "2011-11-01 14:09:29",
+            "last_seen_at": "2011-11-01 14:09:29"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "fandjango.oauthtoken",
+        "fields": {
+            "issued_at": "2011-11-01 14:09:28",
+            "token": "will_change_after_sync",
+            "expires_at": "2311-11-01 14:09:28"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "fandjango.user",
+        "fields": {
+            "facebook_id": 389849,
+            "facebook_username": null,
+            "first_name": "Unittest",
+            "middle_name": null,
+            "last_name": "Waffers",
+            "birthday": "1980-08-08",
+            "authorized": true,
+            "oauth_token": 7,
+            "created_at": "2011-11-01 14:09:29",
+            "last_seen_at": "2011-11-01 14:09:29"
+        }
+    }
+]

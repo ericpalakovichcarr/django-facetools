@@ -8,6 +8,8 @@ FACEBOOK_APPLICATION_CANVAS_PAGE = "https://apps.facebook.com/django-facetools"
 FACEBOOK_APPLICATION_CANVAS_URL = "http://localhost:8000/canvas/"
 from FACEBOOK_APPLICATION_SECRET_KEY import *
 
+FACETOOLS_REQUEST_TIMEOUT = 10
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.

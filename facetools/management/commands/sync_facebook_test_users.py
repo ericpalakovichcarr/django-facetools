@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 from facetools import json
 
 from django.core import management
@@ -10,8 +11,7 @@ import requests
 from facetools.test.testusers import _create_test_user, _friend_test_users, _create_test_user_on_facebook
 from facetools.signals import sync_facebook_test_user
 from facetools.models import TestUser
-from facetools.common import _get_facetools_test_fixture_name, FacebookError
-
+from facetools.common import _get_facetools_test_fixture_name, FacebookError, _get_facebook_graph_data
 
 class Command(BaseCommand):
     help = 'Creates the facebook test users defined for all apps in the project.'
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         # and then get a list of test users that exist both on facebook and in our database
         existing_facebook_test_users = _get_existing_facebook_test_users() # dict {test_user_name: graph_data}
         existing_facetool_test_users = [u.name for u in TestUser.objects.all()]
-        existing_test_users = set(existing_facebook_test_users.keys() + existing_facetool_test_users)
+        existing_test_users_anywhere = set(existing_facebook_test_users.keys() + existing_facetool_test_users)
 
         # Create any test users on facebook their corresponding User models in facetools
         # that don't exist on facebook yet.
@@ -54,7 +54,7 @@ class Command(BaseCommand):
             _print('Syncing %s' % test_user['name'])
 
             # Add user to facebook and local database
-            if test_user['name'] not in existing_test_users:
+            if test_user['name'] not in existing_test_users_anywhere:
                 _create_test_user(
                     app_installed = test_user.get('installed', True),
                     name          = test_user['name'],
@@ -63,34 +63,27 @@ class Command(BaseCommand):
 
             # or add test user to facebook and sync with existing test user in the local database
             elif test_user['name'] not in existing_facebook_test_users:
-                facebook_response_data = _create_test_user_on_facebook(
+                facebook_data = _create_test_user_on_facebook(
                     app_installed = test_user.get('installed', True),
                     name          = test_user['name'],
                     permissions   = test_user.get('permissions')
                 )
                 facetools_user = TestUser.objects.get(name=test_user['name'])
-                facetools_user.facebook_id = facebook_response_data['id']
-                facetools_user.access_token = facebook_response_data.get('access_token')
-                facetools_user.login_url = facebook_response_data.get('login_url')
+                facetools_user._populate_from_graph_data(facebook_data)
                 facetools_user.save()
 
             # or add test user to the local database using the test user's data on facebook
             elif test_user['name'] not in existing_facetool_test_users:
                 facebook_data = existing_facebook_test_users[test_user['name']]
-                TestUser.objects.create(
-                    name         = test_user['name'],
-                    facebook_id  = facebook_data['id'],
-                    access_token = facebook_data.get('access_token'),
-                    login_url    = facebook_data.get('login_url')
-                )
+                facetools_user = TestUser()
+                facetools_user._populate_from_graph_data(facebook_data)
+                facetools_user.save()
 
             # or sync the existing user with the latest facebook information
             else:
                 facebook_data = existing_facebook_test_users[test_user['name']]
                 facetools_user = TestUser.objects.get(name=test_user['name'])
-                facetools_user.facebook_id = facebook_data['id']
-                facetools_user.access_token = facebook_data.get('access_token')
-                facetools_user.login_url = facebook_data.get('login_url')
+                facetools_user._populate_from_graph_data(facebook_data)
                 facetools_user.save()
 
             sync_facebook_test_user.send(sender=None, test_user=TestUser.objects.get(name=test_user['name']))
@@ -127,37 +120,32 @@ def _get_existing_facebook_test_users(app_id=settings.FACEBOOK_APPLICATION_ID, a
     existing_facebook_test_users = {}
     app_access_token = '%s|%s' % (app_id, app_secret)
     test_users_url = "https://graph.facebook.com/%s/accounts/test-users?access_token=%s" % (app_id, app_access_token)
-    for attempts in range(3, 0, -1):
-        response = requests.get(test_users_url)
-        try: users_response_data = json.loads(response.content)
-        except: users_response_data = None
-        if response.status_code != 200 or users_response_data is None or users_response_data == False or 'error' in users_response_data:
-            if attempts > 0:
-                continue
-            try:
-                raise FacebookError("Error retrieving facebook app's test users: %s" % users_response_data['error']['message'])
-            except:
-                try:
-                    raise FacebookError("Error retrieving facebook app's test users: status_code=%s, content=\"%s\"" % (response.status_code, response.content))
-                except:
-                    raise FacebookError("Error retrieving facebook app's test users: status_code=%s" % response.status_code)
-        else:
-            break
-
     test_user_url = "https://graph.facebook.com/%s?access_token=%s"
-    for test_user in users_response_data['data']:
-        user_response_data = json.loads(requests.get(test_user_url % (test_user['id'], app_access_token)).content)
-        if user_response_data == False:
-            # skip invalid users defined on facebook
-            continue
-        if 'error' in user_response_data:
-            raise Exception("Error retrieving data for %s: %s" % (test_user['id'], user_response_data['error']['message']))
-        elif 'name' in user_response_data:
+
+    # Get the list of test users (including facebook_id and access_token), and follow up with their detailed information (like their name)
+    all_test_users = _get_facebook_graph_data(test_users_url, FacebookError, "Error retrieving facebook app's test users")
+    for test_user in all_test_users['data']:
+        user_response_data = _get_facebook_graph_data(test_user_url % (test_user['id'], app_access_token), FacebookError,
+                                                      "Error retrieving test user's graph info (id=%s)" % test_user['id'])
+        if 'name' in user_response_data:
             user_response_data['access_token'] = test_user.get('access_token')
             user_response_data['login_url'] = test_user.get('login_url')
             existing_facebook_test_users[user_response_data['name']] = user_response_data
 
     return existing_facebook_test_users
+    # existing_facebook_test_users will look something like this (may have more fields per user):
+    # {
+    #     'Sam Smith': {
+    #         'id': 1043848985985985,
+    #         'access_token': '89hioph389hg38hg803h0gh30hg3',
+    #         'name': 'Sam Smith',
+    #         ...
+    #     },
+    #     'Judy Sparrow': {
+    #         ...
+    #     },
+    #     ...
+    # }
 
 def _get_test_user_relationships(test_users):
     """

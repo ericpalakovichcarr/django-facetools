@@ -4,16 +4,11 @@ import hmac
 import hashlib
 import time
 
-from django.conf import settings
-from facetools import json
+import requests
 
-class FacebookError(Exception):
-    """
-    An error for a Facebook API call.  Contains the error message from facebook and it's error code.
-    """
-    def __init__(self, message, code=None):
-        super(FacebookException, self).__init__(message)
-        self.code = code
+from facetools import json, settings
+
+class FacebookError(Exception): pass
 
 def _get_app_access_token(app_id=None, app_secret=None):
     """
@@ -39,6 +34,53 @@ def _create_permissions_string(permission_list):
 
 def _get_facetools_test_fixture_name(app_name):
     return "facetools_test_users_%s.json" % app_name
+
+def _get_facebook_graph_data(url, exception_class, error_message_base, convert_to_json=True, method="get", fail_test=None, success_test=None):
+    """
+    Makes a request to a url and converts return the result after running it through json.loads().
+
+    Params:
+    url                - The API endpoint to send the request to
+    exception_class    - If the call fails (bad status code, error message), throw this exception
+    error_message_base - Error message of exceptions will be prepended with this
+    """
+    if settings.FACETOOLS_NUM_REQUEST_ATTEMPTS <= 0:
+        raise ValueError("FACETOOLS_NUM_REQUEST_ATTEMPTS is %s, it needs to be a integer greater than 0." % settings.FACETOOLS_NUM_REQUEST_ATTEMPTS)
+    if settings.FACETOOLS_REQUEST_TIMEOUT <= 0:
+        raise ValueError("FACETOOLS_REQUEST_TIMEOUT is %s, it needs to be a integer greater than 0." % settings.FACETOOLS_NUM_REQUEST_ATTEMPTS)
+
+    # Make the API call, retrying a few times if it fails
+    for i in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS):
+        try:
+            data, error_message = None, None
+            response = getattr(requests, method)(url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
+            if convert_to_json:
+                try: data = json.loads(response.content)
+                except: data = None
+            else:
+                data = response.content
+
+            if response.status_code != 200 or data is None or data == False or (isinstance(data, dict) and 'error' in data):
+                data = None
+                try: error_message = data['error']['message']
+                except: error_message = None
+            elif fail_test is not None and fail_test(response):
+                data, error_message = None, None
+            elif success_test is not None and success_test(response):
+                break
+            else:
+                break
+        except Exception, e:
+            data, error_message = None, e.__class__.__name__ + ": " + str(e)
+
+    # Raise an exception if something went wrong
+    if data is None:
+        if error_message:
+            raise exception_class("%s: %s" % (error_message_base, error_message))
+        else:
+            raise exception_class("%s: status_code=%s, content=\"%s\"" % (error_message_base, response.status_code, response.content))
+
+    return data
 
 # ---------------------------------------------------------------------
 # Following code originally by Reik Schatz. Taken from Fandjango. Thanks Reik!

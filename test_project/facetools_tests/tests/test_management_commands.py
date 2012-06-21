@@ -533,6 +533,7 @@ class FixTestUserFixtureTests(TestCase):
         self.assertEquals(expected_content, new_content)
 
 class FandjangoIntegrationTest(TestCase):
+    fixtures = ['fandjango_users_testapp3']
 
     def _pre_setup(self):
         sync_facebook_test_user.connect(fandjango.sync_facebook_test_user)
@@ -557,13 +558,14 @@ class FandjangoIntegrationTest(TestCase):
         test_users = _merge_with_facebook_data(facebook_test_users, json.loads(requests.get(test_users_url).content)['data'], _get_app_access_token())
 
         # Make sure only the test users that have the app installed have correpsonding Fandjango User records
-        self.assertEquals(2, User.objects.count())
+        self.assertEquals(3, User.objects.count())
         for test_user in test_users:
+            user = User.objects.get(facebook_id=int(test_user['graph_user_data']['id']))
+            self.assertEquals(test_user['installed'], user.authorized)
             if test_user['installed']:
-                user = User.objects.get(facebook_id=int(test_user['graph_user_data']['id']))
                 self.assertEquals(test_user['access_token'], user.oauth_token.token)
             else:
-                self.assertEquals(0, User.objects.filter(facebook_id=int(test_user['graph_user_data']['id'])).count())
+                self.assertEquals("", user.oauth_token.token)
 
 def _merge_with_facebook_data(facebook_test_users, graph_test_users, access_token):
     """

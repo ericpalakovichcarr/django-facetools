@@ -20,12 +20,20 @@ def sync_facebook_test_user(sender, **kwargs):
             first_name=first_name,
             middle_name=middle_name,
             last_name=last_name)
+        db_user.facebook_id = int(kwargs['test_user'].facebook_id)
+        db_user.authorized = user_installed_app
+        oauth_token = models.OAuthToken()
         if user_installed_app:
-            db_user.facebook_id = int(kwargs['test_user'].facebook_id)
-            db_user.oauth_token.token = kwargs['test_user'].access_token
-            db_user.save()
-            db_user.oauth_token.save()
+            oauth_token.token = kwargs['test_user'].access_token
+            oauth_token.issued_at = datetime.datetime.now()
+            oauth_token.expires_at = kwargs['test_user'].access_token_expires
         else:
-            db_user.delete()
+            oauth_token.token = ""
+            oauth_token.issued_at = datetime.datetime.fromtimestamp(0)
+            oauth_token.expires_at = datetime.datetime.fromtimestamp(0)
+        oauth_token.save()
+        db_user.oauth_token = oauth_token
+        db_user.save()
+
     except models.User.DoesNotExist:
         pass
