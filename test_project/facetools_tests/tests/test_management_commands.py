@@ -72,6 +72,7 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
         self.assertEquals(int(test_users[0]['graph_user_data']['id']), user.facebook_id)
+        self.assertEquals(60, user.placeholder_facebook_id)
         self.assertEquals(test_users[0]['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
@@ -103,6 +104,7 @@ class SyncFacebookTestUsersTests(TestCase):
         self.assertEquals(1, TestUser.objects.count())
         user = TestUser.objects.get()
         self.assertEquals(int(test_users[0]['graph_user_data']['id']), user.facebook_id)
+        self.assertEquals(60, user.placeholder_facebook_id)
         self.assertEquals(test_users[0]['graph_user_data']['name'], user.name)
         self.assertEquals(test_users[0]['graph_user_data']['login_url'], user.login_url)
         self.assertEquals(test_users[0]['installed'], _has_access_code(user.access_token))
@@ -135,9 +137,10 @@ class SyncFacebookTestUsersTests(TestCase):
 
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
-        for user in TestUser.objects.all():
+        for i,user in enumerate(TestUser.objects.order_by('placeholder_facebook_id').all()):
             test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(61+i, user.placeholder_facebook_id)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
             self.assertAccessTokenExpirationDate(user)
@@ -171,9 +174,10 @@ class SyncFacebookTestUsersTests(TestCase):
 
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
-        for user in TestUser.objects.all():
+        for i,user in enumerate(TestUser.objects.order_by('placeholder_facebook_id').all()):
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(61+i, user.placeholder_facebook_id)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
             self.assertAccessTokenExpirationDate(user)
@@ -206,9 +210,10 @@ class SyncFacebookTestUsersTests(TestCase):
 
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
-        for user in TestUser.objects.all():
+        for i,user in enumerate(TestUser.objects.order_by('placeholder_facebook_id').all()):
             test_user = [t for t in test_users if int(t['graph_user_data']['id']) == user.facebook_id][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(64+i, user.placeholder_facebook_id)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
             self.assertAccessTokenExpirationDate(user)
@@ -242,9 +247,10 @@ class SyncFacebookTestUsersTests(TestCase):
 
         # Make sure each test user's information in facetools is correct
         self.assertEquals(3, TestUser.objects.count())
-        for user in TestUser.objects.all():
+        for i,user in enumerate(TestUser.objects.order_by('placeholder_facebook_id').all()):
             test_user = [t for t in test_users if t['graph_user_data']['id'] == str(user.facebook_id)][0]
             self.assertEquals(test_user['name'], user.name)
+            self.assertEquals(64+i, user.placeholder_facebook_id)
             self.assertEquals(test_user['graph_user_data']['login_url'], user.login_url)
             self.assertEquals(test_user['installed'], _has_access_code(user.access_token))
             self.assertAccessTokenExpirationDate(user)

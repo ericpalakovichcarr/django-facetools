@@ -52,7 +52,6 @@ def _get_facebook_graph_data(url, exception_class, error_message_base, convert_t
     # Make the API call, retrying a few times if it fails
     for i in range(settings.FACETOOLS_NUM_REQUEST_ATTEMPTS):
         try:
-            data, error_message = None, None
             response = getattr(requests, method)(url, timeout=settings.FACETOOLS_REQUEST_TIMEOUT)
             if convert_to_json:
                 try: data = json.loads(response.content)
@@ -61,24 +60,20 @@ def _get_facebook_graph_data(url, exception_class, error_message_base, convert_t
                 data = response.content
 
             if response.status_code != 200 or data is None or data == False or (isinstance(data, dict) and 'error' in data):
+                # Check if this response that failed is actually an acceptable outcome (e.g. You're already friends error)
+                if success_test is not None and success_test(response):
+                    break
                 data = None
-                try: error_message = data['error']['message']
-                except: error_message = None
             elif fail_test is not None and fail_test(response):
-                data, error_message = None, None
-            elif success_test is not None and success_test(response):
-                break
+                data = None
             else:
                 break
         except Exception, e:
-            data, error_message = None, e.__class__.__name__ + ": " + str(e)
+            raise exception_class("%s: %s" % (error_message_base, e.__class__.__name__ + ": " + str(e)))
 
     # Raise an exception if something went wrong
     if data is None:
-        if error_message:
-            raise exception_class("%s: %s" % (error_message_base, error_message))
-        else:
-            raise exception_class("%s: status_code=%s, content=\"%s\"" % (error_message_base, response.status_code, response.content))
+        raise exception_class("%s: status_code=%s, content=\"%s\"" % (error_message_base, response.status_code, response.content))
 
     return data
 

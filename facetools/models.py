@@ -8,6 +8,7 @@ class TestUser(models.Model):
     """
     name = models.CharField(max_length=255, primary_key=True)
     facebook_id = models.BigIntegerField(null=True, blank=True)
+    placeholder_facebook_id = models.BigIntegerField(null=True, blank=True)
     access_token = models.CharField(max_length=255, null=True, blank=True)
     access_token_expires = models.DateTimeField(null=True)
     login_url = models.CharField(max_length=255, null=True, blank=True)

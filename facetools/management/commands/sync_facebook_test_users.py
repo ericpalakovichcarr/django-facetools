@@ -56,9 +56,10 @@ class Command(BaseCommand):
             # Add user to facebook and local database
             if test_user['name'] not in existing_test_users_anywhere:
                 _create_test_user(
-                    app_installed = test_user.get('installed', True),
-                    name          = test_user['name'],
-                    permissions   = test_user.get('permissions')
+                    app_installed           = test_user.get('installed', True),
+                    name                    = test_user['name'],
+                    permissions             = test_user.get('permissions'),
+                    placeholder_facebook_id = test_user.get('placeholder_facebook_id')
                 )
 
             # or add test user to facebook and sync with existing test user in the local database
@@ -69,6 +70,7 @@ class Command(BaseCommand):
                     permissions   = test_user.get('permissions')
                 )
                 facetools_user = TestUser.objects.get(name=test_user['name'])
+                facetools_user.placeholder_facebook_id = test_user.get('placeholder_facebook_id')
                 facetools_user._populate_from_graph_data(facebook_data)
                 facetools_user.save()
 
@@ -76,6 +78,7 @@ class Command(BaseCommand):
             elif test_user['name'] not in existing_facetool_test_users:
                 facebook_data = existing_facebook_test_users[test_user['name']]
                 facetools_user = TestUser()
+                facetools_user.placeholder_facebook_id = test_user.get('placeholder_facebook_id')
                 facetools_user._populate_from_graph_data(facebook_data)
                 facetools_user.save()
 
@@ -83,6 +86,7 @@ class Command(BaseCommand):
             else:
                 facebook_data = existing_facebook_test_users[test_user['name']]
                 facetools_user = TestUser.objects.get(name=test_user['name'])
+                facetools_user.placeholder_facebook_id = test_user.get('placeholder_facebook_id')
                 facetools_user._populate_from_graph_data(facebook_data)
                 facetools_user.save()
 

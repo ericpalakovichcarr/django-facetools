@@ -12,7 +12,7 @@
         "pk": 5,
         "model": "fandjango.user",
         "fields": {
-            "facebook_id": 6238798,
+            "facebook_id": 24,
             "facebook_username": null,
             "first_name": "Unittest",
             "middle_name": null,

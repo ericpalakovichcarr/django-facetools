@@ -12,7 +12,7 @@
         "pk": 5,
         "model": "fandjango.user",
         "fields": {
-            "facebook_id": 6238798,
+            "facebook_id": 65,
             "facebook_username": null,
             "first_name": "Unittest",
             "middle_name": null,
@@ -37,7 +37,7 @@
         "pk": 6,
         "model": "fandjango.user",
         "fields": {
-            "facebook_id": 9089747,
+            "facebook_id": 64,
             "facebook_username": null,
             "first_name": "Unittest",
             "middle_name": null,
@@ -62,7 +62,7 @@
         "pk": 7,
         "model": "fandjango.user",
         "fields": {
-            "facebook_id": 389849,
+            "facebook_id": 66,
             "facebook_username": null,
             "first_name": "Unittest",
             "middle_name": null,

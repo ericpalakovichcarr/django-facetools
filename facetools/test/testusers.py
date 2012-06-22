@@ -13,7 +13,7 @@ class CreateTestUserError(Exception): pass
 class CreateTestUserWarn(Warning): pass
 class DeleteTestUserError(Exception): pass
 
-def _create_test_user(app_installed=True, name=None, permissions=None, access_token=None):
+def _create_test_user(app_installed=True, name=None, permissions=None, access_token=None, placeholder_facebook_id=None):
     """
     Creates a test user on facebook and a corresponding User and OAuthToken object in the database.
     Friends can be set with set_test_user_friends after all test users are created.  Assumes
@@ -25,7 +25,7 @@ def _create_test_user(app_installed=True, name=None, permissions=None, access_to
         permissions=permissions,
         access_token=access_token
     )
-    _create_test_user_in_facetools(facebook_response_data)
+    _create_test_user_in_facetools(facebook_response_data, placeholder_facebook_id=placeholder_facebook_id)
 
 def _create_test_user_on_facebook(app_installed=True, name=None, permissions=None, access_token=None):
     """
@@ -84,7 +84,7 @@ def _delete_test_user_on_facebook(test_user):
                              "Error deleting test user %s (%s) from facebook" % (test_user.name, test_user.facebook_id),
                              method="delete", convert_to_json=False, fail_test=lambda r: r.content.strip().lower() != "true")
 
-def _create_test_user_in_facetools(facebook_data):
+def _create_test_user_in_facetools(facebook_data, placeholder_facebook_id=None):
     """
     Takes the JSON from creating a test user in the Graph API and creates a new TestUser record in the database.
     """
@@ -93,6 +93,7 @@ def _create_test_user_in_facetools(facebook_data):
         test_user = TestUser.objects.get(facebook_id=int(facebook_data['id']))
     except TestUser.DoesNotExist:
         test_user = TestUser()
+    test_user.placeholder_facebook_id = placeholder_facebook_id
     test_user._populate_from_graph_data(facebook_data)
     test_user.save()
 
