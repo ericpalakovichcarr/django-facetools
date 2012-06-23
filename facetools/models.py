@@ -24,7 +24,7 @@ class TestUser(models.Model):
         self.name = facebook_data.get('name', self.name)
         self.facebook_id = facebook_data['id']
         self.access_token = facebook_data.get('access_token')
-        self.access_token_expires = ts2dt(int(facebook_data.get('expires', 0)))
+        self.access_token_expires = facebook_data.get('access_token_expires')
         self.login_url = facebook_data.get('login_url')
 
     def __unicode__(self):

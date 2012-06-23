@@ -52,7 +52,7 @@ def _create_test_user_on_facebook(app_installed=True, name=None, permissions=Non
 
     # Create the test user
     new_test_user_create_data = _get_facebook_graph_data(test_user_create_url, CreateTestUserError, "Request to create test user failed")
-    new_test_user_create_data['access_token_extended'] = False
+    new_test_user_create_data['access_token_expires'] = None
 
     # Get the new test user's open graph user data
     test_user_info_url = test_user_info_template % (new_test_user_create_data['id'], access_token)
