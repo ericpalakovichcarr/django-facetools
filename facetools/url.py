@@ -74,7 +74,7 @@ def facebook_redirect(to, skip_replace=False, request=None, *args, **kwargs):
 
     Uses a template defined at facetools/facebook_redirect.html.  If you'd like
     to provide your own template, override this template.  It'll be provided with a
-    context variable `url` for the redirect url.  Set the `request` kwarg to a request
+    context variable `redirect_url` for the redirect url.  Set the `request` kwarg to a request
     if you'd like to have all your context processor values available in the template.
 
     Refer to https://docs.djangoproject.com/en/1.3/topics/http/shortcuts/#redirect
@@ -87,6 +87,6 @@ def facebook_redirect(to, skip_replace=False, request=None, *args, **kwargs):
 
     return render_to_response(
         "facetools/facebook_redirect.html",
-        {'url':url},
+        {'redirect_url':url},
         context_instance=RequestContext(request)
     )
