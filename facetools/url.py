@@ -1,9 +1,10 @@
 from urlparse import urlparse
 
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render_to_response
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.template.context import RequestContext
 
 def translate_url_to_facebook_url(url):
     """
@@ -56,12 +57,12 @@ def facebook_reverse(*args, **kwargs):
     url = reverse(*args, **kwargs)
     return translate_url_to_facebook_url(url)
 
-def facebook_redirect(to, skip_replace=False, *args, **kwargs):
+def facebook_redirect(to, skip_replace=False, request=None, *args, **kwargs):
     """
     Drop in replacement for Django's redirect function.  Instead of returning a
     redirect using HTTP status codes and header values, it returns a regular HTML
     response with an empty body and a javascript fragment that sets the
-    location variable in the DOM::
+    location variable in the DOM:
 
         <script type="text/javascript">
             top.location.href="https://apps.facebook.com/myapp/page/";
@@ -71,29 +72,21 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     IFrame to outside facebook pages (like authentication) and causes the
     users url in the address bar to update when redirecting to another internal page.
 
+    Uses a template defined at facetools/facebook_redirect.html.  If you'd like
+    to provide your own template, override this template.  It'll be provided with a
+    context variable `url` for the redirect url.  Set the `request` kwarg to a request
+    if you'd like to have all your context processor values available in the template.
+
     Refer to https://docs.djangoproject.com/en/1.3/topics/http/shortcuts/#redirect
     for more information on the agruments the ``facebook_redirect`` can take.
     """
-    html_template = """
-    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-            "http://www.w3.org/TR/html4/loose.dtd">
-    <html>
-    <head>
-        <script type="text/javascript">
-            top.location.href="%(url)s";
-        </script>
-    </head>
-    <body>
-        <noscript>
-            Redirecting to <a href="%(url)s" target="_top">%(url)s</a>.  Please <a href="%(url)s" target="_top">click here</a> if you aren't redirected.
-        </noscript>
-    </body>
-    </html>
-    """
-
     redirect_response = redirect(to, *args, **kwargs)
     url = redirect_response['Location']
     if not skip_replace:
         url = translate_url_to_facebook_url(url)
 
-    return HttpResponse(html_template % {'url':url})
+    return render_to_response(
+        "facetools/facebook_redirect.html",
+        {'url':url},
+        context_instance=RequestContext(request)
+    )
