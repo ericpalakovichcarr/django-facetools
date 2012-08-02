@@ -1,7 +1,7 @@
 from urlparse import urlparse
 
 from django.http import HttpResponse
-from django.shortcuts import redirect, render_to_response
+import django.shortcuts
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.template.context import RequestContext
@@ -80,13 +80,13 @@ def facebook_redirect(to, skip_replace=False, request=None, *args, **kwargs):
     Refer to https://docs.djangoproject.com/en/1.3/topics/http/shortcuts/#redirect
     for more information on the agruments the ``facebook_redirect`` can take.
     """
-    redirect_response = redirect(to, *args, **kwargs)
+    redirect_response = django.shortcuts.redirect(to, *args, **kwargs)
     url = redirect_response['Location']
     if not skip_replace:
         url = translate_url_to_facebook_url(url)
 
-    return render_to_response(
+    return django.shortcuts.render_to_response(
         "facetools/facebook_redirect.html",
         {'redirect_url':url},
-        context_instance=RequestContext(request)
+        context_instance=RequestContext(request) if request else None
     )

@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.test import TestCase
+from django.http import HttpRequest
 from django.template.base import Template
-from django.template.context import Context
+from django.template.context import Context, RequestContext
+import mock
 
 from facetools.url import facebook_reverse, facebook_redirect, translate_url_to_facebook_url
 from canvas.models import ModelForTests
@@ -159,6 +161,16 @@ class UrlTests(TestCase):
         response = facebook_redirect('canvas:test_url')
         self.assertEquals(response.status_code, 200)
         self.assertIn('%s/test_url/' % settings.FACEBOOK_CANVAS_PAGE, response.content)
+
+    @mock.patch('django.shortcuts.render_to_response')
+    def test_redirect_with_null_request(self, render_mock):
+        facebook_redirect('canvas:test_url')
+        render_mock.assert_called_once_with(mock.ANY, mock.ANY, context_instance=None)
+
+    @mock.patch('django.shortcuts.render_to_response')
+    def test_redirect_with_a_request(self, render_mock):
+        facebook_redirect('canvas:test_url', request=HttpRequest())
+        self.assertEquals(RequestContext, type(render_mock.call_args[1]['context_instance']))
 
 class UrlTestsNoCanvasRemoval(TestCase):
 
