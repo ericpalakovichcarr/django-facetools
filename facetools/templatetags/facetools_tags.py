@@ -38,4 +38,7 @@ def replacement_URLNode_render_method(self, context):
     url_str = self.old_render(context)
     if url_str:
         url_str = translate_url_to_facebook_url(url_str)
-    return url_str
+        return url_str
+    elif self.asvar and context[self.asvar]:
+        context[self.asvar] = translate_url_to_facebook_url(context[self.asvar])
+    return ''
