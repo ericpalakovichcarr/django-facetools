@@ -7,15 +7,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
         # Changing field 'TestUser.facebook_id'
-        db.alter_column('facetools_testuser', 'facebook_id', self.gf('django.db.models.fields.BigIntegerField')(null=True))
+        db.drop_column('facetools_testuser', 'facebook_id')
+        db.add_column('facetools_testuser', 'facebook_id', self.gf('django.db.models.fields.BigIntegerField')(null=True))
 
 
     def backwards(self, orm):
-        
-        # Changing field 'TestUser.facebook_id'
-        db.alter_column('facetools_testuser', 'facebook_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True))
+        # Revert field 'TestUser.facebook_id'
+        db.drop_column('facetools_testuser', 'facebook_id')
+        db.add_column('facetools_testuser', 'facebook_id', self.gf('django.db.models.fields.CharField')(max_length=255, null=True))
 
 
     models = {
