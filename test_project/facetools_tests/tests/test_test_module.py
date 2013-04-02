@@ -64,6 +64,28 @@ class TestFacebookTestCase3(FacebookTestCase):
         self.assertEquals(self.test_user, TestUser.objects.get(name="Unittest Mako"))
         self.assertEquals("Unittest Mako", self.test_user.name)
 
+class TestManualTestClientSetup(FacebookTestCase):
+
+    def test_integration(self):
+        facebook_id = '100003104442433'
+        oauth_token = 'AAADRl8p2NnABAAI0ima5W5R2R2mvOij975cjLtpTLZBgWY0mtvO2oxAYPEQDFBExVgepvsnc3vUnOewgr9ItDDpDZBUmZCOmu9Nc7rXZAFS0vC3iGdWy'
+        def assertSignedRequest(sender, **kwargs):
+            signed_request = _parse_signed_request(kwargs['signed_request'], settings.FACEBOOK_APPLICATION_SECRET_KEY)
+            self.assertEquals(facebook_id, signed_request['user_id'])
+            self.assertEquals(oauth_token, signed_request['oauth_token'])
+            self.assertTrue(signed_request['issued_at'] > 0)
+            self.assertEquals(0, signed_request['expires'])
+            self.assertEquals('us', signed_request['user']['country'])
+            self.assertEquals('en_US', signed_request['user']['locale'])
+            assertSignedRequest.called = True
+        assertSignedRequest.called = False
+        try:
+            setup_facebook_test_client.connect(assertSignedRequest)
+            self.set_client_signed_request(facebook_id, oauth_token)
+            self.assertTrue(assertSignedRequest.called)
+        finally:
+            setup_facebook_test_client.disconnect(assertSignedRequest)
+
 class TestFandjangoIntegration(FacebookTestCase):
     facebook_test_user = "Unittest Mako"
     fixtures = ['one_fandjango_user.json']

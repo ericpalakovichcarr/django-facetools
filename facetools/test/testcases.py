@@ -16,6 +16,14 @@ class FacebookTestCaseMixin(object):
     """
     facebook_test_user = None
 
+    def set_client_signed_request(self, facebook_id, access_token):
+        """
+        Allow code to configure the test client so it has a signed request
+        of the specified test user for each request
+        """
+        setup_facebook_test_client.send(sender=None, client=self.client, signed_request=_create_signed_request(
+            settings.FACEBOOK_APPLICATION_SECRET_KEY, facebook_id, oauth_token=access_token))
+
     def _pre_setup(self):
         if self.facebook_test_user:
             if type(self.facebook_test_user) not in [str, unicode]:
@@ -35,15 +43,8 @@ class FacebookTestCaseMixin(object):
             try:
                 for test_user in TestUser.objects.all():
                     sync_facebook_test_user.send(sender=None, test_user=test_user)
-
-                # Allow code to configure the test client so it has a signed request
-                # of the specified test user for each request
                 self.test_user = TestUser.objects.get(name=self.facebook_test_user)
-                setup_facebook_test_client.send(sender=None, client=self.client, signed_request=_create_signed_request(
-                    settings.FACEBOOK_APPLICATION_SECRET_KEY,
-                    str(self.test_user.facebook_id),
-                    oauth_token=self.test_user.access_token,
-                ))
+                self.set_client_signed_request(self.test_user.facebook_id, self.test_user.access_token)
             except TestUser.DoesNotExist:
                 raise TestUserNotLoaded("Test user %s hasn't been loaded via the %s fixture (did you run sync_facebook_test_users?)" %
                                         (self.facebook_test_user, facetools_fixture_name))

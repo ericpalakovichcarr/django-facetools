@@ -5,6 +5,7 @@ dist
 virenv
 .idea
 docs/_build
+scratch_pad.py
 facetools_test_users_testapp1.json
 facetools_test_users_testapp2.json
 facetools_test_users_testapp3.json
