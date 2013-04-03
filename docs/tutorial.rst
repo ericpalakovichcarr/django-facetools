@@ -742,6 +742,41 @@ added to a cookie that Fandjango sets when a user logins on the real Facebook ca
 
 Now if you go ahead and run the tests again everything should pass.
 
+Manually manage Facebook Test Users in test cases
+---------------------------------------------------
+
+*New in 0.2*
+
+Currently, our `ServerSideTests` test case should look like this:
+
+    class ServerSideTests(FacebookTestCase):
+        fixtures = ['polls.json']
+        facebook_test_user = "Sam Samson"
+
+        # ... rest of test case ...#
+
+In *0.2* you can now manually set the signed request for a `FacebookTestCase` test client,
+instead of using a `facebook_test_users.py` file, the `facebook_test_user` attribute, and
+the `sync_facebook_test_users` management command.  Instead you can use the new
+`set_client_signed_request` method to set the test client's signed request.
+
+The `set_client_signed_request` accepts a facebook user ID and an access token.  This will
+cause the `setup_facebook_test_client` For example, you could modify the `ServerSideTests`
+test case to look like this:
+
+    class ServerSideTests(FacebookTestCase):
+
+        def setUp(self):
+            facebook_id, oauth_token = your_function_for_getting_a_users_facebook_id_and_oauth_token()
+            self.set_client_signed_request(facebook_id, oauth_token)
+
+        # ... rest of test case ...#
+
+This way you can manage creation and deletion of test users manually.  This also works well if you don't
+need to automatically sync your test fixture data with real and currently active test user facebook ids
+and access tokens.  This makes sense if your test coverage doesn't touch any open graph calls, or
+if you use a library to mock away open graph calls.
+
 Wrap Up
 =======
 

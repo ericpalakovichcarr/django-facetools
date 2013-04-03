@@ -19,6 +19,8 @@ Features:
   specify a test user's name, much like a fixture, and the test client will mock
   Facebook requests to your canvas app, complete with a valid signed request for the
   specified test user.
+* *New in version 0.2:* ``FacebookTestCase`` can also have the test client's signed request
+set manually with the new ``set_client_signed_request`` method.
 * Integration with other facebook django packages, supporting the following (with more to come):
   * Fandjango (https://github.com/jgorset/fandjango)
 
