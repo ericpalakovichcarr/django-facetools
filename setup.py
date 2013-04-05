@@ -31,6 +31,9 @@ setup(
         'facetools.templatetags',
         'facetools.test',
     ],
+    package_data = {
+        'facetools': ['templates/facetools/facebook_redirect.html'],
+    },
     classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
