@@ -36,6 +36,9 @@ def replacement_URLNode_render_method(self, context):
     """
     # NOTE: Pretend this method exists inside the URLNode class (because when it's called it will be)
     url_str = self.old_render(context)
-    if url_str:
+    if self.asvar and context[self.asvar]:
+        context[self.asvar] = translate_url_to_facebook_url(context[self.asvar])
+        return ''
+    elif url_str:
         url_str = translate_url_to_facebook_url(url_str)
     return url_str
