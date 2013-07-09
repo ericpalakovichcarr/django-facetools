@@ -86,7 +86,7 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if message:
         html_template += """
         alert('%(message)s');
-        """ % {'message': escape(message)}
+        """ % {'message': str(escape(message))}
     html_template += """
             top.location.href="%(url)s";
         </script>
