@@ -75,7 +75,7 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     Refer to https://docs.djangoproject.com/en/1.3/topics/http/shortcuts/#redirect
     for more information on the agruments the ``facebook_redirect`` can take.
     """
-    message = unicode(kwargs.get("message"))
+    message = escape(unicode(kwargs.get("message")).encode(settings.DEFAULT_CHARSET))
     html_template = """
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
             "http://www.w3.org/TR/html4/loose.dtd">
@@ -86,7 +86,7 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if message:
         html_template += """
         alert('%(message)s');
-        """ % {'message': str(escape(message))}
+        """ % {'message': message}
     html_template += """
             top.location.href="%(url)s";
         </script>
