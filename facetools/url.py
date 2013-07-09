@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.utils.html import escape
 
 def translate_url_to_facebook_url(url):
     """
@@ -85,7 +86,7 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if message:
         html_template += """
         alert('%(message)s');
-        """ % {'message': message}
+        """ % {'message': escape(message)}
     html_template += """
             top.location.href="%(url)s";
         </script>
