@@ -80,7 +80,9 @@ def facebook_redirect(to, skip_replace=False, *args, **kwargs):
     if not skip_replace:
         url = translate_url_to_facebook_url(url)
     
-    message = escape(unicode(kwargs.get("message")).encode(settings.DEFAULT_CHARSET))
+    message = kwargs.get("message")
+    if message:
+        message = escape(unicode(kwargs.get("message")).encode(settings.DEFAULT_CHARSET))
     html_template = """
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
             "http://www.w3.org/TR/html4/loose.dtd">
